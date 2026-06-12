@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GraphCTI — The graph is the product</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:ital@1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#10151F;
+  --panel:#161D2B;
+  --panel2:#1B2434;
+  --paper:#E9E5DA;
+  --dim:#8B93A3;
+  --hair:rgba(233,229,218,.13);
+  --actor:#E5484D;
+  --org:#5B8DD9;
+  --sector:#E8A33D;
+  --country:#58A66B;
+  --domain:#D9C868;
+  --ttp:#A78BDA;
+  --vuln:#D96C47;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --serif:'IBM Plex Serif',Georgia,serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--paper);font-family:var(--sans);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:var(--paper)}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--sector);outline-offset:3px;border-radius:2px}
+.wrap{max-width:980px;margin:0 auto;padding:0 24px}
+
+/* ---------- shared ---------- */
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
+.eyebrow b{color:var(--sector);font-weight:500}
+h2{font-family:var(--mono);font-weight:500;font-size:clamp(22px,3.4vw,30px);line-height:1.25;letter-spacing:-.01em;margin:14px 0 18px}
+.lede{color:var(--dim);max-width:62ch}
+.sec{padding:96px 0;border-top:1px solid var(--hair)}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+.kicker{font-family:var(--serif);font-style:italic;font-size:20px;color:var(--paper);opacity:.92}
+
+/* ---------- header ---------- */
+header{position:sticky;top:0;z-index:9;background:rgba(16,21,31,.82);backdrop-filter:blur(8px);border-bottom:1px solid var(--hair)}
+.bar{display:flex;align-items:center;justify-content:space-between;height:54px}
+.brand{font-family:var(--mono);font-size:13px;letter-spacing:.14em;text-decoration:none}
+.brand i{font-style:normal;color:var(--sector)}
+nav.top{display:flex;gap:22px}
+nav.top a{font-family:var(--mono);font-size:12px;color:var(--dim);text-decoration:none}
+nav.top a:hover{color:var(--paper)}
+
+/* ---------- hero ---------- */
+.hero{padding:84px 0 70px}
+.hero h1{font-family:var(--mono);font-weight:600;font-size:clamp(30px,5.4vw,52px);line-height:1.14;letter-spacing:-.02em;margin:18px 0 20px;max-width:34ch}
+.hero h1 .em{color:var(--org)}
+.hero h1 .em2{color:var(--sector)}
+.hero .tagline{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;color:var(--dim);margin:-6px 0 22px}
+.hero .lede{font-size:18px;margin-bottom:46px}
+
+.stage{position:relative;background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--hair);border-radius:10px;padding:26px 22px 18px;overflow:hidden}
+.stage .chrome{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:18px}
+.stage .chrome .dot{width:8px;height:8px;border-radius:50%;background:var(--hair)}
+.ingest{font-family:var(--mono);font-size:12.5px;color:var(--dim);min-height:42px;word-break:break-all}
+.ingest .k{color:var(--dim)}
+.ingest .v-actor{color:var(--actor)}
+.ingest .v-org{color:var(--org)}
+.ingest .v-country{color:var(--country)}
+.ingest .v-sector{color:var(--sector)}
+.ingest .v-ttp{color:var(--ttp)}
+.caret{display:inline-block;width:7px;height:14px;background:var(--paper);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+svg.graph{display:block;width:100%;height:auto;margin-top:6px}
+svg.graph text{font-family:var(--mono)}
+.nlabel{font-size:11px;fill:var(--paper)}
+.nsub{font-size:9.5px;fill:var(--dim)}
+.elabel{font-size:9px;fill:var(--dim);letter-spacing:.06em}
+g.node{opacity:0;transform:scale(.4);transform-box:fill-box;transform-origin:center;transition:opacity .45s ease,transform .55s cubic-bezier(.2,1.4,.4,1)}
+g.node.on{opacity:1;transform:scale(1)}
+line.edge{stroke-width:1.4;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .6s ease .05s}
+line.edge.on{stroke-dashoffset:0}
+text.elabel{opacity:0;transition:opacity .4s ease .35s}
+text.elabel.on{opacity:1}
+.stagefoot{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:12px;flex-wrap:wrap}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.replay{font-family:var(--mono);font-size:11.5px;color:var(--paper);background:none;border:1px solid var(--hair);border-radius:6px;padding:7px 14px}
+.replay:hover{border-color:var(--dim)}
+
+/* ---------- cycle ---------- */
+.rail{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:40px}
+@media(max-width:760px){.rail{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.rail{grid-template-columns:1fr}}
+.step{background:var(--panel);border:1px solid var(--hair);border-radius:8px;padding:16px 14px;transition:border-color .5s,background .5s}
+.step .n{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.18em}
+.step h3{font-family:var(--mono);font-weight:500;font-size:14px;margin:8px 0 6px}
+.step p{font-size:13px;color:var(--dim);line-height:1.5}
+.step.lit{border-color:var(--sector);background:var(--panel2)}
+.step.lit .n{color:var(--sector)}
+.step .cov{margin-top:10px;font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--dim);min-height:13px;opacity:0;transition:opacity .5s ease}
+.rail.tip .cov,.rail.ours .cov{opacity:1}
+.rail.tip .step.covered{border-color:rgba(233,229,218,.4);background:var(--panel2)}
+.rail.tip .step.dimstep{opacity:.5}
+.rail.tip .step.gap{border:1px dashed var(--actor)}
+.rail.tip .step.gap .n,.rail.tip .step.gap .cov{color:var(--actor)}
+.rail.ours .step{border-color:var(--sector);background:var(--panel2)}
+.rail.ours .step .n,.rail.ours .cov{color:var(--sector)}
+/* phase vignettes */
+.step{cursor:pointer}
+.step.sel{box-shadow:0 0 0 1px var(--sector)}
+.vhint{margin-top:16px;font-family:var(--mono);font-size:11px;color:var(--dim)}
+.vstage{display:none;margin-top:14px;background:var(--panel);border:1px solid var(--hair);border-radius:10px;padding:20px}
+.vstage.open{display:block}
+.vpanel{display:none}
+.vpanel.active{display:block}
+.vhead{display:flex;justify-content:space-between;gap:10px;align-items:baseline;border-bottom:1px solid var(--hair);padding-bottom:10px;margin-bottom:16px;flex-wrap:wrap}
+.vhead h4{font-family:var(--mono);font-weight:500;font-size:14px}
+.vhead .vtag{font-family:var(--mono);font-size:11px;color:var(--sector)}
+svg.vis text{font-family:var(--mono)}
+.srclab{font-size:11px;fill:var(--dim)}
+.recline{font-size:10px;fill:var(--dim)}
+.pirc{stroke:var(--paper);stroke-dasharray:4 3}
+.pkt{opacity:0}
+.vpanel.active .pkt{animation:pktmove 2.1s linear infinite}
+@keyframes pktmove{0%{transform:translate(0,0);opacity:0}12%{opacity:1}88%{opacity:1}100%{transform:translate(var(--dx),var(--dy));opacity:0}}
+.faded{opacity:.3 !important;transition:opacity .6s ease}
+g.hotn circle{animation:hotpulse 1.6s ease-in-out infinite}
+.mnode{transition:transform .9s ease,opacity .5s ease}
+.mnode.m1{transform:translate(45px,40px)}
+.mnode.m2{transform:translate(45px,-40px)}
+.mnode.gone{opacity:0}
+.vquery{font-family:var(--mono);font-size:12.5px;color:var(--paper);margin-bottom:14px;min-height:20px}
+.brief{font-family:var(--mono);font-size:12px;background:#0C1018;border:1px solid var(--hair);border-radius:8px;padding:16px 18px;max-width:600px}
+.brief .bh{font-size:10px;letter-spacing:.16em;color:var(--dim);border-bottom:1px solid var(--hair);padding-bottom:8px;margin-bottom:10px}
+.brow{display:flex;gap:10px;padding:7px 0;opacity:0;transform:translateY(6px);transition:opacity .45s ease,transform .45s ease}
+.brow.show{opacity:1;transform:none}
+.btag{flex:none;font-size:9px;letter-spacing:.1em;padding:2px 6px;border-radius:4px;border:1px solid var(--hair);color:var(--dim);height:fit-content;margin-top:2px}
+.btag.assess{color:var(--sector);border-color:var(--sector)}
+.brow p{color:var(--paper);font-size:12px;line-height:1.55}
+.brow .src{color:var(--dim)}
+@media (prefers-reduced-motion: reduce){.vpanel.active .pkt{animation:none;opacity:.7}}
+.cyclenote{margin-top:22px;font-size:14px;color:var(--dim);max-width:60ch}
+
+/* ---------- claims ---------- */
+.split{display:grid;grid-template-columns:1.05fr .95fr;gap:36px;align-items:center;margin-top:36px;position:relative}
+@media(max-width:820px){.split{grid-template-columns:1fr}}
+.report{background:var(--panel);border:1px solid var(--hair);border-radius:10px;padding:24px}
+.report .rhead{font-family:var(--mono);font-size:10.5px;color:var(--dim);letter-spacing:.14em;border-bottom:1px solid var(--hair);padding-bottom:10px;margin-bottom:14px;display:flex;justify-content:space-between}
+.report p{font-size:14px;line-height:1.85;color:var(--dim)}
+.claim{color:var(--paper);border-radius:3px;padding:1px 3px;transition:background .6s ease,box-shadow .6s ease}
+.c1.on{background:rgba(217,108,71,.22);box-shadow:0 0 0 1px rgba(217,108,71,.4)}
+.c2.on{background:rgba(167,139,218,.20);box-shadow:0 0 0 1px rgba(167,139,218,.4)}
+.c3.on{background:rgba(232,163,61,.20);box-shadow:0 0 0 1px rgba(232,163,61,.4)}
+.c4.on{background:rgba(91,141,217,.20);box-shadow:0 0 0 1px rgba(91,141,217,.4)}
+.chip{position:absolute;z-index:6;font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:999px;border:1px solid;background:var(--panel2);white-space:nowrap;pointer-events:none;transition:transform 1.45s cubic-bezier(.35,.15,.25,1),opacity .4s ease 1.05s}
+.tally{margin-top:16px;font-family:var(--mono);font-size:12px;color:var(--dim)}
+.tally b{color:var(--paper);font-weight:500}
+svg.mini text{font-family:var(--mono)}
+svg.mini .nlabel{font-size:9.5px}
+svg.mini .nsub{font-size:8.5px}
+.lstag{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--dim);margin-bottom:14px}
+#lsGraph .lstag{color:var(--sector)}
+#lsGraph.active .lsframe{border-color:var(--sector);box-shadow:0 0 0 1px rgba(232,163,61,.35),0 0 30px rgba(232,163,61,.12);transition:box-shadow .6s ease,border-color .6s ease}
+.briefnote{margin-top:10px;font-family:var(--mono);font-size:10.5px;color:var(--dim);max-width:600px}
+.briefnote b{color:var(--sector);font-weight:500}
+
+/* ---------- landscape ---------- */
+.lstoggle{display:flex;gap:10px;margin:34px 0 18px}
+.lsbtn{font-family:var(--mono);font-size:12px;color:var(--dim);background:var(--panel);border:1px solid var(--hair);border-radius:999px;padding:8px 16px}
+.lsbtn[aria-pressed="true"]{color:var(--paper);border-color:var(--sector);background:var(--panel2)}
+.lspanel{display:none}
+.lspanel.active{display:block}
+.lsframe{background:var(--panel);border:1px solid var(--hair);border-radius:10px;padding:20px;overflow:hidden}
+table.tip{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px}
+table.tip th{font-weight:500;color:var(--dim);text-align:left;letter-spacing:.1em;font-size:10.5px;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--hair)}
+table.tip td{padding:9px 10px;border-bottom:1px solid rgba(233,229,218,.06);color:var(--dim)}
+table.tip td:nth-child(2){color:var(--paper)}
+.pager{display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--dim)}
+.pager .fake{border:1px solid var(--hair);border-radius:5px;padding:5px 10px;opacity:.6}
+.lscaption{margin-top:14px;font-size:13.5px;color:var(--dim)}
+.lscaption b{color:var(--paper);font-weight:500}
+svg.land text{font-family:var(--mono)}
+.orgdot{opacity:0;transition:opacity .4s ease}
+.orgdot.on{opacity:1}
+line.thin{stroke-width:1;opacity:.55}
+line.edge.hot{stroke-width:2.4;animation:hotpulse 1.6s ease-in-out infinite}
+@keyframes hotpulse{50%{opacity:.45}}
+text.callout{font-size:11px;fill:var(--paper);opacity:0;transition:opacity .6s ease}
+text.callout,text.elabel,svg .nsub{paint-order:stroke;stroke:var(--panel);stroke-width:4px;stroke-linejoin:round}
+text.callout.on{opacity:1}
+text.callsub{font-size:9.5px;fill:var(--dim)}
+line.leader2{stroke:var(--dim);stroke-width:.8;stroke-dasharray:3 3;opacity:0;transition:opacity .6s ease}
+line.leader2.on{opacity:.7}
+.contrast{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:26px}
+@media(max-width:760px){.contrast{grid-template-columns:1fr}}
+.cv{background:var(--panel);border:1px solid var(--hair);border-radius:8px;padding:16px 14px}
+.cv .from{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:line-through;text-decoration-color:rgba(229,72,77,.6)}
+.cv .to{font-family:var(--mono);font-size:13px;color:var(--sector);margin:6px 0 8px}
+.cv p{font-size:13px;color:var(--dim);line-height:1.5}
+table.tip tbody tr{cursor:pointer}
+table.tip tbody tr:hover td{background:rgba(233,229,218,.04)}
+table.tip tr.rowsel td{background:var(--panel2)}
+.recdetail{display:none;margin-top:14px;border:1px dashed var(--actor);border-radius:8px;padding:14px 16px;font-family:var(--mono);font-size:12px}
+.recdetail.openrd{display:block;animation:fadeup .4s ease}
+@keyframes fadeup{from{opacity:0;transform:translateY(6px)}}
+.recdetail .rdh{font-size:10px;letter-spacing:.14em;color:var(--dim);border-bottom:1px solid var(--hair);padding-bottom:7px;margin-bottom:9px}
+.rdrow{padding:3px 0;color:var(--dim)}
+.rdrow b{color:var(--paper);font-weight:500}
+.dead{color:var(--actor)}
+.rdrow.rdim{margin-top:7px;font-size:11px}
+.orgdot.hot{animation:hotpulse 1.6s ease-in-out infinite}
+.gapline{display:block;margin-top:9px;padding-top:8px;border-top:1px dashed var(--hair);color:var(--dim);font-size:13px}
+.gapline i{font-style:normal;font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--sector);border:1px solid var(--sector);border-radius:4px;padding:1px 5px;margin-right:7px;white-space:nowrap}
+.e2e{margin-top:14px;max-width:760px}
+.e2e .stg rect,.e2e .stg circle{fill:none;stroke:var(--hair);stroke-width:1.2;transition:stroke .4s ease}
+.e2e .stg text{fill:var(--dim);transition:fill .4s ease}
+.e2e .stg.on rect,.e2e .stg.on circle{stroke:var(--sector)}
+.e2e .stg.on text{fill:var(--paper)}
+.e2e .zg{opacity:.4;transition:opacity .4s ease}
+.e2e .zg.on{opacity:1}
+.e2e .zg circle{fill:none;stroke-width:1.3;transition:stroke-width .3s ease}
+.e2e .zg.on circle{stroke-width:2.1}
+.e2e .zg text{fill:var(--paper)}
+.e2e #zdot{stroke:none !important;fill:var(--sector)}
+.zdot{opacity:0;transition:transform .55s ease,opacity .45s ease}
+#zctx{transition:opacity .3s ease}
+/* traditional vignettes */
+.tdoc rect{fill:none;stroke:var(--hair);stroke-width:1}
+.tline{font-size:10.5px;fill:var(--dim)}
+.tlink{font-size:10.5px;fill:var(--org);text-decoration:underline}
+.thead2{font-size:10px;fill:var(--dim);letter-spacing:.12em}
+.tlock rect{fill:none;stroke:var(--actor);stroke-width:1;stroke-dasharray:4 3}
+.tlock text{fill:var(--actor)}
+.t4cur{transition:transform .7s ease}
+.t4cur.cp1{transform:translate(-45px,-42px)}
+.t4cur.cp2{transform:translate(196px,-42px)}
+.t4cur.cp3{transform:translate(408px,-95px)}
+@media (prefers-reduced-motion: reduce){.zdot{transition:none}.t4cur{transition:none}.chip{display:none}.recdetail.openrd{animation:none}}
+
+/* ---------- chat ---------- */
+.term{background:var(--panel);border:1px solid var(--hair);border-radius:10px;padding:22px;margin-top:36px;max-width:760px}
+.qrow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.qbtn{font-family:var(--mono);font-size:12px;color:var(--paper);background:var(--panel2);border:1px solid var(--hair);border-radius:999px;padding:8px 14px}
+.qbtn:hover{border-color:var(--sector)}
+.qbtn[disabled]{opacity:.45;cursor:default}
+.msg{max-width:92%;margin-bottom:14px;opacity:0;transform:translateY(8px);transition:opacity .45s,transform .45s}
+.msg.show{opacity:1;transform:none}
+.msg.user{margin-left:auto;background:var(--panel2);border:1px solid var(--hair);border-radius:10px 10px 2px 10px;padding:10px 14px;font-size:14px;width:fit-content}
+.msg.cypher{font-family:var(--mono);font-size:12px;line-height:1.7;background:#0C1018;border:1px solid var(--hair);border-left:2px solid var(--org);border-radius:6px;padding:12px 14px;color:var(--dim);white-space:pre-wrap}
+.msg.cypher .cy{color:var(--org)}
+.msg.answer{font-size:14.5px;line-height:1.7;border-left:2px solid var(--sector);padding:2px 0 2px 14px}
+.msg.answer b{color:var(--sector);font-weight:600}
+.demonote{margin-top:10px;font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--hair);padding:54px 0 70px}
+.fgrid{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:baseline}
+footer .sig{font-family:var(--mono);font-size:12px;color:var(--dim)}
+footer .sig a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--hair)}
+
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  .reveal,{transition:none}
+  .reveal{opacity:1;transform:none}
+  g.node,line.edge,text.elabel,.msg{transition:none}
+  .caret{animation:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="#top">GRAPH<i>CTI</i></a>
+    <nav class="top" aria-label="Pages">
+      <a href="about.html">about</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow reveal"><b>graphcti</b> // an ai-native knowledge graph for threat intelligence</div>
+    <h1 class="reveal">Threat intel platforms store intelligence.<br>This one analyzes it <span class="em2">with you</span>.</h1>
+    <p class="tagline reveal">the graph is the product · conversation is the interface</p>
+    <p class="lede reveal">Traditional Threat Intelligence Platforms (TIPs) are enriched repositories: everything hangs off siloed report objects, and the analysis is still on you. GraphCTI extracts what reports actually assert, the claims about actors, TTPs, intent, and indicators, into nodes an interpretation layer can traverse. The result: threat profiles in seconds, a fast-moving landscape you can interrogate at scale, and a clear view of what your collection knows and doesn't. Those gaps feed straight back into your PIRs. It does the labor; you own the judgment. Watch one claim become structure.</p>
+
+    <div class="stage reveal" aria-label="Live demonstration: a leak-site record becoming graph structure">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;ingest // multi-source → knowledge graph</div>
+      <div class="ingest" id="ingest" aria-live="polite"></div>
+
+      <svg class="graph" viewBox="0 0 760 400" role="img" aria-label="Landscape graph forming: an actor runs a campaign that uses technique T1486, deploys malware exploiting a CVE, and targets victim organizations in a sector; a vendor report describes the campaign">
+        <!-- edges -->
+        <line id="e1" class="edge" x1="122" y1="200" x2="220" y2="200" stroke="var(--dim)" pathLength="1"/>
+        <line id="e2" class="edge" x1="275" y1="183" x2="423" y2="80"  stroke="var(--ttp)" pathLength="1"/>
+        <line id="e3" class="edge" x1="279" y1="194" x2="430" y2="165" stroke="var(--domain)" pathLength="1"/>
+        <line id="e4" class="edge" x1="480" y1="153" x2="623" y2="111" stroke="var(--vuln)" pathLength="1"/>
+        <line id="e5" class="edge" x1="278" y1="210" x2="420" y2="259" stroke="var(--org)" pathLength="1"/>
+        <line id="e6" class="edge" x1="472" y1="272" x2="622" y2="296" stroke="var(--sector)" pathLength="1"/>
+        <line id="e7" class="edge" x1="250" y1="306" x2="250" y2="234" stroke="var(--dim)" pathLength="1"/>
+        <text id="l1" class="elabel" x="171" y="188" text-anchor="middle">RUNS</text>
+        <text id="l2" class="elabel" x="330" y="122" text-anchor="middle">USES</text>
+        <text id="l3" class="elabel" x="362" y="170" text-anchor="middle">DEPLOYS</text>
+        <text id="l4" class="elabel" x="551" y="120" text-anchor="middle">EXPLOITS</text>
+        <text id="l5" class="elabel" x="332" y="252" text-anchor="middle">TARGETS</text>
+        <text id="l6" class="elabel" x="547" y="272" text-anchor="middle">IN_SECTOR</text>
+        <text id="l7" class="elabel" x="238" y="274" text-anchor="end">DESCRIBES</text>
+        <!-- nodes -->
+        <g id="n1" class="node"><circle cx="92"  cy="200" r="30" fill="none" stroke="var(--actor)" stroke-width="1.6"/><text class="nlabel" x="92"  y="197" text-anchor="middle">Actor</text><text class="nsub" x="92"  y="211" text-anchor="middle">qilin</text></g>
+        <g id="n2" class="node"><circle cx="250" cy="200" r="30" fill="none" stroke="var(--paper)" stroke-width="1.4"/><text class="nlabel" x="250" y="197" text-anchor="middle">Campaign</text><text class="nsub" x="250" y="211" text-anchor="middle">spring 26</text></g>
+        <g id="n3" class="node"><circle cx="445" cy="64"  r="27" fill="none" stroke="var(--ttp)" stroke-width="1.6"/><text class="nlabel" x="445" y="61"  text-anchor="middle">TTP</text><text class="nsub" x="445" y="75"  text-anchor="middle">T1486</text></g>
+        <g id="n4" class="node"><circle cx="455" cy="160" r="26" fill="none" stroke="var(--domain)" stroke-width="1.6"/><text class="nlabel" x="455" y="157" text-anchor="middle">Malware</text><text class="nsub" x="455" y="171" text-anchor="middle">payload</text></g>
+        <g id="n5" class="node"><circle cx="648" cy="104" r="26" fill="none" stroke="var(--vuln)" stroke-width="1.6"/><text class="nlabel" x="648" y="101" text-anchor="middle">CVE</text><text class="nsub" x="648" y="115" text-anchor="middle">exploited</text></g>
+        <g id="n6" class="node"><circle cx="445" cy="268" r="27" fill="none" stroke="var(--org)" stroke-width="1.6"/><text class="nlabel" x="445" y="265" text-anchor="middle">Org</text><text class="nsub" x="445" y="279" text-anchor="middle">victims</text></g>
+        <g id="n7" class="node"><circle cx="648" cy="300" r="26" fill="none" stroke="var(--sector)" stroke-width="1.6"/><text class="nlabel" x="648" y="297" text-anchor="middle">Sector</text><text class="nsub" x="648" y="311" text-anchor="middle">Health</text></g>
+        <g id="n8" class="node"><circle cx="250" cy="336" r="26" fill="none" stroke="var(--dim)" stroke-width="1.4"/><text class="nlabel" x="250" y="333" text-anchor="middle">Report</text><text class="nsub" x="250" y="347" text-anchor="middle">cited</text></g>
+      </svg>
+
+      <div class="stagefoot">
+        <div class="legend" aria-hidden="true">
+          <span><i style="background:var(--actor)"></i>threat actor</span>
+          <span><i style="background:var(--paper)"></i>campaign</span>
+          <span><i style="background:var(--ttp)"></i>technique</span>
+          <span><i style="background:var(--domain)"></i>malware</span>
+          <span><i style="background:var(--vuln)"></i>vulnerability</span>
+          <span><i style="background:var(--org)"></i>organization</span>
+          <span><i style="background:var(--sector)"></i>sector</span>
+        </div>
+        <button class="replay" id="replay" type="button">replay ingest</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CYCLE -->
+<section class="sec" id="cycle">
+  <div class="wrap">
+    <div class="eyebrow reveal">the model</div>
+    <h2 class="reveal">The intelligence cycle, automated end to end</h2>
+    <p class="lede reveal">These five steps are how every intelligence function on earth works. The order below is the order they run: each stage feeds the next. Watch where a traditional platform stops, and where this one doesn't.</p>
+    <div class="lstoggle reveal" role="group" aria-label="Coverage comparison">
+      <button class="lsbtn" id="btnTip" type="button" aria-pressed="false">traditional tip</button>
+      <button class="lsbtn" id="btnOurs" type="button" aria-pressed="false">graphcti</button>
+    </div>
+    <div class="rail" id="rail">
+      <div class="step reveal"><div class="n">PHASE 1</div><h3>Requirements</h3><p>A lightweight profile (sector, geography, stack) defines what matters to you.</p><div class="cov"></div></div>
+      <div class="step reveal"><div class="n">PHASE 2</div><h3>Collection</h3><p>Connectors pull leak sites, ATT&amp;CK, KEV, and the premium feeds you already license.</p><div class="cov"></div></div>
+      <div class="step reveal"><div class="n">PHASE 3</div><h3>Processing</h3><p>Extraction, entity resolution, and dedup turn raw records into provenance-tagged claims.</p><div class="cov"></div></div>
+      <div class="step reveal"><div class="n">PHASE 4</div><h3>Analysis</h3><p>A reasoning model traverses the graph: trends, divergences, actor profiles.</p><div class="cov"></div></div>
+      <div class="step reveal"><div class="n">PHASE 5</div><h3>Dissemination</h3><p>Written briefings, on schedule, in intelligence-community language: fact, then assessment.</p><div class="cov"></div></div>
+    </div>
+    <p class="cyclenote reveal" id="cyclecap">Legacy platforms cover phases two and three, then hand you a search box. The other half of the cycle, the half that was your job, is the product here.</p>
+    <p class="vhint reveal">▸ click any phase to watch it run</p>
+
+    <div class="vstage" id="vstage">
+
+      <div class="vpanel" id="vp0">
+        <div class="vhead"><h4>Phase 1 · Requirements — GraphCTI</h4><span class="vtag">PIRs are nodes, not paperwork</span></div>
+        <svg class="vis" viewBox="0 0 760 255" role="img" aria-label="A company profile node connects to three priority intelligence requirement nodes, each anchored to landscape entities: a sector, a technique, a vendor">
+          <line id="v1e1" class="edge" x1="135" y1="113" x2="322" y2="62"  stroke="var(--dim)" pathLength="1"/>
+          <line id="v1e2" class="edge" x1="138" y1="125" x2="322" y2="125" stroke="var(--dim)" pathLength="1"/>
+          <line id="v1e3" class="edge" x1="135" y1="137" x2="322" y2="188" stroke="var(--dim)" pathLength="1"/>
+          <text id="v1l1" class="elabel" x="228" y="113" text-anchor="middle">HAS_PIR</text>
+          <line id="v1f1" class="edge thin" x1="378" y1="58"  x2="576" y2="55"  stroke="var(--sector)" pathLength="1"/>
+          <line id="v1f2" class="edge thin" x1="378" y1="125" x2="576" y2="125" stroke="var(--ttp)" pathLength="1"/>
+          <line id="v1f3" class="edge thin" x1="378" y1="192" x2="576" y2="195" stroke="var(--org)" pathLength="1"/>
+          <g id="v1c" class="node"><circle cx="108" cy="125" r="28" fill="none" stroke="var(--org)" stroke-width="1.6"/><text class="nlabel" x="108" y="122" text-anchor="middle">Acme</text><text class="nsub" x="108" y="136" text-anchor="middle">profile</text></g>
+          <g id="v1p1" class="node"><circle class="pirc" cx="350" cy="58"  r="26" fill="none" stroke-width="1.4"/><text class="nlabel" x="350" y="55"  text-anchor="middle">PIR-01</text><text class="nsub" x="350" y="69"  text-anchor="middle">ransom·health</text></g>
+          <g id="v1p2" class="node"><circle class="pirc" cx="350" cy="125" r="26" fill="none" stroke-width="1.4"/><text class="nlabel" x="350" y="122" text-anchor="middle">PIR-02</text><text class="nsub" x="350" y="136" text-anchor="middle">edge exploit</text></g>
+          <g id="v1p3" class="node"><circle class="pirc" cx="350" cy="192" r="26" fill="none" stroke-width="1.4"/><text class="nlabel" x="350" y="189" text-anchor="middle">PIR-03</text><text class="nsub" x="350" y="203" text-anchor="middle">supply chain</text></g>
+          <g id="v1t1" class="node"><circle cx="602" cy="55"  r="24" fill="none" stroke="var(--sector)" stroke-width="1.4"/><text class="nlabel" x="602" y="52"  text-anchor="middle">Sector</text><text class="nsub" x="602" y="66"  text-anchor="middle">Health</text></g>
+          <g id="v1t2" class="node"><circle cx="602" cy="125" r="24" fill="none" stroke="var(--ttp)" stroke-width="1.4"/><text class="nlabel" x="602" y="122" text-anchor="middle">TTP</text><text class="nsub" x="602" y="136" text-anchor="middle">T1190</text></g>
+          <g id="v1t3" class="node"><circle cx="602" cy="195" r="24" fill="none" stroke="var(--org)" stroke-width="1.4"/><text class="nlabel" x="602" y="192" text-anchor="middle">Org</text><text class="nsub" x="602" y="206" text-anchor="middle">vendor</text></g>
+          <text id="v1cap" class="callout" x="380" y="244" text-anchor="middle">requirements live in the graph, queryable like everything else</text>
+        </svg>
+      </div>
+
+      <div class="vpanel" id="vp1">
+        <div class="vhead"><h4>Phase 2 · Collection — GraphCTI</h4><span class="vtag">every source, one graph</span></div>
+        <svg class="vis" viewBox="0 0 760 240" role="img" aria-label="Records stream from leak sites, vendor reports, ATT&CK, KEV, and licensed feeds into one graph hub">
+          <text class="srclab" x="170" y="50"  text-anchor="end">leak sites</text>
+          <text class="srclab" x="170" y="90"  text-anchor="end">vendor reports</text>
+          <text class="srclab" x="170" y="130" text-anchor="end">ATT&amp;CK</text>
+          <text class="srclab" x="170" y="170" text-anchor="end">KEV</text>
+          <text class="srclab" x="170" y="210" text-anchor="end">your licensed feeds</text>
+          <line x1="186" y1="46"  x2="498" y2="118" stroke="var(--hair)" stroke-width="1"/>
+          <line x1="186" y1="86"  x2="498" y2="121" stroke="var(--hair)" stroke-width="1"/>
+          <line x1="186" y1="126" x2="498" y2="125" stroke="var(--hair)" stroke-width="1"/>
+          <line x1="186" y1="166" x2="498" y2="129" stroke="var(--hair)" stroke-width="1"/>
+          <line x1="186" y1="206" x2="498" y2="132" stroke="var(--hair)" stroke-width="1"/>
+          <circle class="pkt" cx="186" cy="46"  r="4" fill="var(--paper)"  style="--dx:312px;--dy:72px;animation-delay:0s"/>
+          <circle class="pkt" cx="186" cy="86"  r="4" fill="var(--actor)"  style="--dx:312px;--dy:35px;animation-delay:.45s"/>
+          <circle class="pkt" cx="186" cy="126" r="4" fill="var(--ttp)"    style="--dx:312px;--dy:-1px;animation-delay:.9s"/>
+          <circle class="pkt" cx="186" cy="166" r="4" fill="var(--vuln)"   style="--dx:312px;--dy:-37px;animation-delay:1.35s"/>
+          <circle class="pkt" cx="186" cy="206" r="4" fill="var(--sector)" style="--dx:312px;--dy:-74px;animation-delay:1.8s"/>
+          <circle cx="520" cy="125" r="18" fill="none" stroke="var(--paper)" stroke-width="1.4"/>
+          <line x1="536" y1="116" x2="564" y2="102" stroke="var(--hair)" stroke-width="1"/>
+          <line x1="537" y1="133" x2="566" y2="148" stroke="var(--hair)" stroke-width="1"/>
+          <line x1="505" y1="140" x2="492" y2="164" stroke="var(--hair)" stroke-width="1"/>
+          <circle cx="572" cy="98"  r="7" fill="var(--org)"/>
+          <circle cx="574" cy="152" r="7" fill="var(--sector)"/>
+          <circle cx="488" cy="172" r="7" fill="var(--ttp)"/>
+          <text id="v2cap" class="callout" x="380" y="234" text-anchor="middle">every record lands with source and timestamp; provenance is not optional</text>
+        </svg>
+      </div>
+
+      <div class="vpanel" id="vp2">
+        <div class="vhead"><h4>Phase 3 · Processing — GraphCTI</h4><span class="vtag">claims, resolved and deduplicated</span></div>
+        <svg class="vis" viewBox="0 0 760 250" role="img" aria-label="A raw record yields two organization name variants that merge into one resolved node with deduplication">
+          <g id="v3rec" class="node">
+            <rect x="55" y="70" width="205" height="110" rx="6" fill="none" stroke="var(--hair)" stroke-width="1"/>
+            <text class="recline" x="70" y="98">"victim": "ACME HEALTH LLC"</text>
+            <text class="recline" x="70" y="120">"group": "qilin"</text>
+            <text class="recline" x="70" y="142">"desc": "…zoominfo.com/acme…"</text>
+            <text class="recline" x="70" y="168" fill="var(--actor)">aggregator domain → denylisted</text>
+          </g>
+          <line id="v3ar" class="edge" x1="272" y1="125" x2="340" y2="125" stroke="var(--dim)" pathLength="1"/>
+          <g id="v3a" class="mnode"><circle cx="430" cy="85"  r="20" fill="none" stroke="var(--org)" stroke-width="1.4"/><text class="nsub" x="430" y="55"  text-anchor="middle">acme-health.com</text></g>
+          <g id="v3b" class="mnode"><circle cx="430" cy="165" r="20" fill="none" stroke="var(--org)" stroke-width="1.4"/><text class="nsub" x="430" y="200" text-anchor="middle">ACME HEALTH LLC</text></g>
+          <g id="v3c" class="node"><circle cx="475" cy="125" r="24" fill="none" stroke="var(--org)" stroke-width="1.8"/><text class="nlabel" x="475" y="122" text-anchor="middle">Org</text><text class="nsub" x="475" y="136" text-anchor="middle">acme-health.com</text></g>
+          <text id="v3d" class="callout callsub" x="475" y="178" text-anchor="middle">deduplicated · one node</text>
+          <text id="v3cap1" class="callout" x="638" y="110" text-anchor="middle">two names, one entity</text>
+          <text id="v3cap2" class="callout callsub" x="638" y="124" text-anchor="middle">entity resolution at ingest</text>
+        </svg>
+      </div>
+
+      <div class="vpanel" id="vp3">
+        <div class="vhead"><h4>Phase 4 · Analysis — GraphCTI</h4><span class="vtag">relevance is a traversal</span></div>
+        <div class="vquery" id="v4q" aria-live="polite"></div>
+        <svg class="vis" viewBox="0 0 760 235" role="img" aria-label="A fresh report mentions Qilin and answers PIR-01, which belongs to Acme — the highlighted path is the relevance; a 26-hour-old report mentioning ShinyHunters fades outside the window">
+          <line id="v4m1" class="edge" x1="106" y1="57"  x2="275" y2="78"  stroke="var(--dim)" pathLength="1"/>
+          <line id="v4m2" class="edge" x1="98"  y1="113" x2="275" y2="92"  stroke="var(--dim)" pathLength="1"/>
+          <line id="v4m3" class="edge" x1="108" y1="187" x2="276" y2="189" stroke="var(--dim)" pathLength="1"/>
+          <line id="v4ans" class="edge" x1="107" y1="42"  x2="473" y2="61"  stroke="var(--sector)" pathLength="1"/>
+          <line id="v4h1" class="edge" x1="526" y1="79"  x2="648" y2="111" stroke="var(--org)" pathLength="1"/>
+          <line id="v4h2" class="edge" x1="524" y1="177" x2="650" y2="134" stroke="var(--org)" pathLength="1"/>
+          <text id="v4lm" class="elabel" x="191" y="56"  text-anchor="middle">MENTIONS</text>
+          <text id="v4la" class="elabel" x="290" y="40"  text-anchor="middle" fill="var(--sector)">ANSWERS</text>
+          <text id="v4lh" class="elabel" x="592" y="84"  text-anchor="middle">HAS_PIR</text>
+          <g id="v4r1" class="node"><circle cx="90" cy="50"  r="17" fill="none" stroke="var(--paper)" stroke-width="1.2"/><text class="nsub" x="90" y="54"  text-anchor="middle" fill="var(--paper)">Rpt</text><text class="nsub" x="90" y="78"  text-anchor="middle">2h ago</text></g>
+          <g id="v4r2" class="node"><circle cx="80" cy="118" r="17" fill="none" stroke="var(--paper)" stroke-width="1.2"/><text class="nsub" x="80" y="122" text-anchor="middle" fill="var(--paper)">Rpt</text><text class="nsub" x="80" y="146" text-anchor="middle">9h ago</text></g>
+          <g id="v4r3" class="node"><circle cx="90" cy="186" r="17" fill="none" stroke="var(--paper)" stroke-width="1.2"/><text class="nsub" x="90" y="190" text-anchor="middle" fill="var(--paper)">Rpt</text><text class="nsub" x="90" y="214" text-anchor="middle">26h ago</text></g>
+          <g id="v4a1" class="node"><circle cx="300" cy="85"  r="24" fill="none" stroke="var(--actor)" stroke-width="1.6"/><text class="nlabel" x="300" y="89"  text-anchor="middle">Qilin</text></g>
+          <g id="v4a2" class="node"><circle cx="300" cy="190" r="22" fill="none" stroke="var(--actor)" stroke-width="1.4"/><text class="nsub" x="300" y="187" text-anchor="middle" fill="var(--paper)">Shiny</text><text class="nsub" x="300" y="199" text-anchor="middle" fill="var(--paper)">Hunters</text></g>
+          <g id="v4p1" class="node"><circle class="pirc" cx="500" cy="70"  r="26" fill="none" stroke-width="1.4"/><text class="nlabel" x="500" y="67"  text-anchor="middle">PIR-01</text><text class="nsub" x="500" y="81"  text-anchor="middle">ransom·health</text></g>
+          <g id="v4p2" class="node"><circle class="pirc" cx="500" cy="170" r="24" fill="none" stroke-width="1.4"/><text class="nlabel" x="500" y="167" text-anchor="middle">PIR-03</text><text class="nsub" x="500" y="181" text-anchor="middle">supply chain</text></g>
+          <g id="v4co" class="node"><circle cx="675" cy="120" r="26" fill="none" stroke="var(--org)" stroke-width="1.6"/><text class="nlabel" x="675" y="117" text-anchor="middle">Acme</text><text class="nsub" x="675" y="131" text-anchor="middle">you</text></g>
+          <text id="v4cap" class="callout" x="385" y="230" text-anchor="middle">the report answers PIR-01 → PIR-01 belongs to you → relevance is structural · stale reporting falls out of the window</text>
+        </svg>
+      </div>
+
+      <div class="vpanel" id="vp4">
+        <div class="vhead"><h4>Phase 5 · Dissemination — GraphCTI</h4><span class="vtag">augmented report writing: drafted by the graph, owned by the analyst · not built yet</span></div>
+        <div class="brief">
+          <div class="bh">WEEKLY INTELLIGENCE BRIEFING · MON 06:00 · DRAFT FOR ANALYST REVIEW</div>
+          <div class="brow" id="v5r1"><span class="btag">FACT</span><p>qilin disclosed 17 healthcare victims this week. <span class="src">graph: 3 sources · PIR-01</span></p></div>
+          <div class="brow" id="v5r2"><span class="btag">FACT</span><p>New edge-device exploitation reporting links T1190 to two actors active in your sector. <span class="src">PIR-02</span></p></div>
+          <div class="brow" id="v5r3"><span class="btag assess">ASSESS</span><p>Elevated risk to regional providers over the next quarter; prioritize edge appliance patching. <span class="src">moderate confidence</span></p></div>
+        </div>
+        <p class="briefnote"><b>NOT BUILT YET</b>: dissemination here is augmentation, not replacement. The graph drafts grounded facts and surfaces insights; the analyst writes the assessment and owns the product. Teams that prefer fully analyst-written reports keep them; the graph just does the gathering.</p>
+      </div>
+
+      <div class="vpanel" id="vt0">
+        <div class="vhead"><h4>Phase 1 · Requirements — traditional TIP</h4><span class="vtag">a document, not data</span></div>
+        <svg class="vis" viewBox="0 0 760 230" role="img" aria-label="An analyst drafts PIRs in a Word document that is saved to SharePoint and never enters the platform">
+          <g id="t1doc" class="node tdoc">
+            <rect x="180" y="20" width="400" height="172" rx="6"/>
+            <text class="thead2" x="200" y="44">PIR_2026_FINAL_v3.docx</text>
+            <line x1="200" y1="54" x2="560" y2="54" stroke="var(--hair)" stroke-width="1"/>
+          </g>
+          <text id="t1l1" class="callout tline" x="200" y="82">1. Which ransomware groups target healthcare?</text>
+          <text id="t1l2" class="callout tline" x="200" y="108">2. Which vulns are exploited against our stack?</text>
+          <text id="t1l3" class="callout tline" x="200" y="134">3. Are our suppliers being targeted?</text>
+          <text id="t1f"  class="callout tline" x="200" y="176" fill="var(--actor)">last modified: 9 months ago · SharePoint</text>
+          <text id="t1cap" class="callout" x="380" y="218" text-anchor="middle">a static document the platform never reads, so requirements can't drive queries</text>
+        </svg>
+      </div>
+
+      <div class="vpanel" id="vt1">
+        <div class="vhead"><h4>Phase 2 · Collection — traditional TIP</h4><span class="vtag">feeds in, rows out</span></div>
+        <svg class="vis" viewBox="0 0 760 230" role="img" aria-label="Connector feeds stream records into a paginated table interface">
+          <text class="srclab" x="150" y="64"  text-anchor="end">MISP connector</text>
+          <text class="srclab" x="150" y="114" text-anchor="end">TAXII feed</text>
+          <text class="srclab" x="150" y="164" text-anchor="end">RSS / vendor blogs</text>
+          <line x1="166" y1="60"  x2="338" y2="100" stroke="var(--hair)" stroke-width="1"/>
+          <line x1="166" y1="110" x2="338" y2="112" stroke="var(--hair)" stroke-width="1"/>
+          <line x1="166" y1="160" x2="338" y2="124" stroke="var(--hair)" stroke-width="1"/>
+          <circle class="pkt" cx="166" cy="60"  r="4" fill="var(--actor)"  style="--dx:172px;--dy:40px;animation-delay:0s"/>
+          <circle class="pkt" cx="166" cy="110" r="4" fill="var(--ttp)"    style="--dx:172px;--dy:2px;animation-delay:.7s"/>
+          <circle class="pkt" cx="166" cy="160" r="4" fill="var(--sector)" style="--dx:172px;--dy:-36px;animation-delay:1.4s"/>
+          <g id="t2tab" class="node tdoc">
+            <rect x="345" y="38" width="340" height="148" rx="6"/>
+            <text class="thead2" x="360" y="60">INDICATORS &amp; OBSERVABLES</text>
+            <line x1="360" y1="70" x2="670" y2="70" stroke="var(--hair)" stroke-width="1"/>
+          </g>
+          <g id="t2r1" class="node"><text class="tline" x="360" y="92">10.4.x.x · ip-src · qilin · 2026-06-08</text></g>
+          <g id="t2r2" class="node"><text class="tline" x="360" y="116">a3f9…c41 · sha256 · unattributed · 2026-06-08</text></g>
+          <g id="t2r3" class="node"><text class="tline" x="360" y="140">acme-health[.]com · domain · — · 2026-06-07</text></g>
+          <text id="t2pg" class="callout tline" x="360" y="172" fill="var(--dim)">‹ prev · page 1 of 4,217 · next ›</text>
+          <text id="t2cap" class="callout" x="380" y="218" text-anchor="middle">rows accumulate; context doesn't</text>
+        </svg>
+      </div>
+
+      <div class="vpanel" id="vt2">
+        <div class="vhead"><h4>Phase 3 · Processing — traditional TIP</h4><span class="vtag">DIY playbooks · paywalled rules</span></div>
+        <svg class="vis" viewBox="0 0 760 230" role="img" aria-label="Processing requires hand-built playbook blocks; automated extraction sits behind an enterprise paywall">
+          <g id="t3b1" class="node tdoc"><rect x="70" y="62" width="150" height="58" rx="6"/><text class="tline" x="145" y="86" text-anchor="middle" fill="var(--paper)">trigger</text><text class="tline" x="145" y="104" text-anchor="middle">new report object</text></g>
+          <line id="t3a1" class="edge" x1="220" y1="91" x2="268" y2="91" stroke="var(--dim)" pathLength="1"/>
+          <g id="t3b2" class="node tdoc"><rect x="270" y="62" width="150" height="58" rx="6"/><text class="tline" x="345" y="86" text-anchor="middle" fill="var(--paper)">enrich IOC</text><text class="tline" x="345" y="104" text-anchor="middle">you build this</text></g>
+          <line id="t3a2" class="edge" x1="420" y1="91" x2="468" y2="91" stroke="var(--dim)" pathLength="1"/>
+          <g id="t3b3" class="node tdoc"><rect x="470" y="62" width="150" height="58" rx="6"/><text class="tline" x="545" y="86" text-anchor="middle" fill="var(--paper)">tag &amp; file</text><text class="tline" x="545" y="104" text-anchor="middle">you maintain this</text></g>
+          <g id="t3lock" class="node tlock"><rect x="190" y="150" width="380" height="36" rx="6"/><text class="tline" x="380" y="172" text-anchor="middle">auto-extraction of TTPs &amp; intent · ENTERPRISE TIER 🔒</text></g>
+          <text id="t3cap" class="callout" x="380" y="218" text-anchor="middle">processing is build-it-yourself, or behind a subscription wall</text>
+        </svg>
+      </div>
+
+      <div class="vpanel" id="vt3">
+        <div class="vhead"><h4>Phase 4 · Analysis — traditional TIP</h4><span class="vtag">you are the traversal engine</span></div>
+        <svg class="vis" viewBox="0 0 760 230" role="img" aria-label="The analyst clicks from a report screen to an actor screen to another report screen, manually building a hypothesis across siloed views">
+          <g id="t4c1" class="node tdoc">
+            <rect x="30" y="30" width="220" height="150" rx="6"/>
+            <text class="thead2" x="46" y="54">REPORT #4412</text>
+            <text class="tline" x="46" y="82">actor: Qilin</text>
+            <text class="tline" x="46" y="104">TTPs: see PDF (p. 7–11)</text>
+            <text id="t4k1" class="tlink" x="46" y="160">related: Qilin →</text>
+          </g>
+          <g id="t4c2" class="node tdoc">
+            <rect x="280" y="30" width="200" height="150" rx="6"/>
+            <text class="thead2" x="296" y="54">ACTOR: QILIN</text>
+            <text class="tline" x="296" y="82">aliases: Agenda</text>
+            <text class="tline" x="296" y="104">sectors: (per report)</text>
+            <text id="t4k2" class="tlink" x="296" y="160">related reports (38) →</text>
+          </g>
+          <g id="t4c3" class="node tdoc">
+            <rect x="510" y="30" width="220" height="150" rx="6"/>
+            <text class="thead2" x="526" y="54">REPORT #3007</text>
+            <text class="tline" x="526" y="82">actor: Qilin</text>
+            <text class="tline" x="526" y="104">open PDF · read 18 pages</text>
+            <text class="tline" x="526" y="126">extract relevance by hand</text>
+          </g>
+          <circle id="t4cur" class="node t4cur" cx="150" cy="205" r="6" fill="var(--paper)"/>
+          <text id="t4cnt" class="callout" x="380" y="222" text-anchor="middle">…12 clicks later, the hypothesis lives in your head, not in the data</text>
+        </svg>
+      </div>
+
+      <div class="vpanel" id="vt4">
+        <div class="vhead"><h4>Phase 5 · Dissemination — traditional TIP</h4><span class="vtag">manual drafting, every week</span></div>
+        <svg class="vis" viewBox="0 0 760 230" role="img" aria-label="The weekly threat report is drafted by hand in a document, due Friday">
+          <g id="t5doc" class="node tdoc">
+            <rect x="190" y="20" width="400" height="160" rx="6"/>
+            <text class="thead2" x="210" y="44">Weekly_Threat_Report_DRAFT_v3.docx</text>
+            <line x1="210" y1="54" x2="570" y2="54" stroke="var(--hair)" stroke-width="1"/>
+          </g>
+          <text id="t5l1" class="callout tline" x="210" y="84">Executive summary — TODO</text>
+          <text id="t5l2" class="callout tline" x="210" y="110">copy stats from TIP · reformat · cite · screenshot</text>
+          <text id="t5l3" class="callout tline" x="210" y="136" fill="var(--actor)">due Friday COB</text>
+          <text id="t5cap" class="callout" x="380" y="218" text-anchor="middle">dissemination is an analyst-hour tax; most TIPs don't even try</text>
+        </svg>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- LANDSCAPE -->
+<section class="sec" id="landscape">
+  <div class="wrap">
+    <div class="eyebrow reveal">the landscape</div>
+    <h2 class="reveal">The same intelligence, two ways</h2>
+    <p class="lede reveal">Below is one dataset rendered twice. A traditional TIP stores victimology as records and makes you page through them; relationships exist only if you think to ask. A knowledge graph stores the relationships as the data, so the pattern is the first thing you see, not the last thing you find.</p>
+
+    <div class="lstoggle reveal" role="group" aria-label="Switch between traditional TIP view and knowledge graph view">
+      <button class="lsbtn" id="btnTable" type="button" aria-pressed="true">traditional tip view</button>
+      <button class="lsbtn" id="btnGraph" type="button" aria-pressed="false">knowledge graph view</button>
+    </div>
+
+    <div class="lspanel active reveal" id="lsTable">
+      <div class="lsframe">
+        <div class="lstag">TRADITIONAL TIP · TABLE VIEW</div>
+        <table class="tip" aria-label="Victim records as a flat table">
+          <thead><tr><th>disclosed</th><th>group</th><th>victim</th><th>sector</th><th>country</th></tr></thead>
+          <tbody>
+            <tr><td>2026-06-08</td><td>qilin</td><td>acme-imaging.com</td><td>Healthcare</td><td>US</td></tr>
+            <tr><td>2026-06-07</td><td>INC Ransom</td><td>acme-fabrication.com</td><td>Manufacturing</td><td>US</td></tr>
+            <tr><td>2026-06-06</td><td>qilin</td><td>acme-clinics.org</td><td>Healthcare</td><td>US</td></tr>
+            <tr><td>2026-06-05</td><td>ShinyHunters</td><td>acme-metallwerk.de</td><td>Manufacturing</td><td>DE</td></tr>
+            <tr><td>2026-06-04</td><td>INC Ransom</td><td>acme-health.net</td><td>Healthcare</td><td>US</td></tr>
+            <tr><td>2026-06-03</td><td>qilin</td><td>acme-medical.ca</td><td>Healthcare</td><td>CA</td></tr>
+            <tr><td>2026-06-02</td><td>INC Ransom</td><td>acme-machining.com</td><td>Manufacturing</td><td>US</td></tr>
+            <tr><td>2026-06-01</td><td>qilin</td><td>acme-surgical.com</td><td>Healthcare</td><td>US</td></tr>
+          </tbody>
+        </table>
+        <div class="pager"><span class="fake">‹ prev</span><span>page 1 of 4,217</span><span class="fake">next ›</span></div>
+        <div class="recdetail" id="recdetail" aria-live="polite">
+          <div class="rdh">RECORD DETAIL · <span class="dead">siloed view</span></div>
+          <div class="rdrow">group: <b id="rdg"></b></div>
+          <div class="rdrow">victim: <b id="rdv"></b></div>
+          <div class="rdrow">meta: <b id="rds"></b></div>
+          <div class="rdrow">related entities: <span class="dead">none linked</span> · shared TTPs: <span class="dead">unknown</span> · PIR relevance: <span class="dead">unknown</span></div>
+          <div class="rdrow">extraction: <span class="dead">manual: open the report, read it, copy TTPs / intent / IOCs by hand</span></div>
+          <div class="rdrow rdim">context requires three more searches, each one another silo</div>
+        </div>
+      </div>
+      <p class="lscaption">Every fact is in here. The connections between facts (<b>shared techniques, sector concentration, actor overlap</b>) are not. Click a row: the detail view is a dead end.</p>
+    </div>
+
+    <div class="lspanel reveal" id="lsGraph">
+      <div class="lsframe">
+        <div class="lstag">GRAPHCTI · KNOWLEDGE GRAPH VIEW</div>
+        <svg class="land" viewBox="0 0 760 430" role="img" aria-label="Landscape graph: qilin and INC Ransom both use technique T1486; their victim organizations cluster around the healthcare and manufacturing sectors">
+          <!-- victim edges -->
+          <line id="lse1"  class="edge thin" x1="142" y1="102" x2="354" y2="72"  stroke="var(--dim)" pathLength="1"/>
+          <line id="lse2"  class="edge thin" x1="146" y1="108" x2="414" y2="110" stroke="var(--dim)" pathLength="1"/>
+          <line id="lse3"  class="edge thin" x1="144" y1="116" x2="374" y2="150" stroke="var(--dim)" pathLength="1"/>
+          <line id="lse4"  class="edge thin" x1="146" y1="112" x2="434" y2="172" stroke="var(--dim)" pathLength="1"/>
+          <line id="lse5"  class="edge thin" x1="134" y1="294" x2="414" y2="262" stroke="var(--dim)" pathLength="1"/>
+          <line id="lse6"  class="edge thin" x1="132" y1="302" x2="384" y2="310" stroke="var(--dim)" pathLength="1"/>
+          <line id="lse7"  class="edge thin" x1="134" y1="306" x2="454" y2="330" stroke="var(--dim)" pathLength="1"/>
+          <line id="lse8"  class="edge thin" x1="326" y1="368" x2="464" y2="382" stroke="var(--dim)" pathLength="1"/>
+          <!-- sector edges -->
+          <line id="lss1" class="edge thin" x1="360" y1="68"  x2="536" y2="110" stroke="var(--sector)" pathLength="1"/>
+          <line id="lss2" class="edge thin" x1="420" y1="108" x2="536" y2="116" stroke="var(--sector)" pathLength="1"/>
+          <line id="lss3" class="edge thin" x1="380" y1="146" x2="538" y2="126" stroke="var(--sector)" pathLength="1"/>
+          <line id="lss4" class="edge thin" x1="440" y1="168" x2="540" y2="134" stroke="var(--sector)" pathLength="1"/>
+          <line id="lss5" class="edge thin" x1="420" y1="258" x2="546" y2="142" stroke="var(--sector)" pathLength="1"/>
+          <line id="lss6" class="edge thin" x1="390" y1="306" x2="550" y2="290" stroke="var(--sector)" pathLength="1"/>
+          <line id="lss7" class="edge thin" x1="460" y1="328" x2="552" y2="298" stroke="var(--sector)" pathLength="1"/>
+          <line id="lss8" class="edge thin" x1="470" y1="380" x2="556" y2="312" stroke="var(--sector)" pathLength="1"/>
+          <!-- country edges -->
+          <line id="lsc1" class="edge thin" x1="440" y1="170" x2="662" y2="196" stroke="var(--country)" pathLength="1"/>
+          <line id="lsc2" class="edge thin" x1="420" y1="260" x2="662" y2="204" stroke="var(--country)" pathLength="1"/>
+          <!-- shared technique edges -->
+          <line id="lsu1" class="edge" x1="144" y1="124" x2="282" y2="202" stroke="var(--ttp)" pathLength="1"/>
+          <line id="lsu2" class="edge" x1="132" y1="286" x2="282" y2="228" stroke="var(--ttp)" pathLength="1"/>
+          <!-- callout leaders -->
+          <line id="lsl1" class="leader2" x1="300" y1="186" x2="300" y2="146"/>
+          <line id="lsl2" class="leader2" x1="566" y1="98" x2="588" y2="56"/>
+          <line id="lsl3" class="leader2" x1="360" y1="60" x2="360" y2="36"/>
+          <line id="lspe" class="edge thin" x1="679" y1="66" x2="586" y2="112" stroke="var(--paper)" pathLength="1"/>
+          <g id="lsp1" class="node"><circle class="pirc" cx="700" cy="55" r="24" fill="none" stroke-width="1.4"/><text class="nlabel" x="700" y="52" text-anchor="middle">PIR-01</text><text class="nsub" x="700" y="65" text-anchor="middle">ransom·health</text></g>
+          <!-- actors -->
+          <g id="lsn1" class="node"><circle cx="120" cy="110" r="26" fill="none" stroke="var(--actor)" stroke-width="1.6"/><text class="nlabel" x="120" y="114" text-anchor="middle">qilin</text></g>
+          <g id="lsn2" class="node"><circle cx="110" cy="298" r="24" fill="none" stroke="var(--actor)" stroke-width="1.6"/><text class="nlabel" x="110" y="295" text-anchor="middle">INC</text><text class="nsub" x="110" y="308" text-anchor="middle">Ransom</text></g>
+          <g id="lsn3" class="node"><circle cx="308" cy="368" r="20" fill="none" stroke="var(--actor)" stroke-width="1.4"/><text class="nsub" x="308" y="365" text-anchor="middle" fill="var(--paper)">Shiny</text><text class="nsub" x="308" y="377" text-anchor="middle" fill="var(--paper)">Hunters</text></g>
+          <!-- technique -->
+          <g id="lsn4" class="node"><circle cx="300" cy="215" r="24" fill="none" stroke="var(--ttp)" stroke-width="1.6"/><text class="nlabel" x="300" y="212" text-anchor="middle">T1486</text><text class="nsub" x="300" y="226" text-anchor="middle">encrypt</text></g>
+          <!-- victim orgs -->
+          <circle id="lso1" class="orgdot" cx="360" cy="70"  r="7" fill="var(--org)"/>
+          <circle id="lso2" class="orgdot" cx="420" cy="110" r="7" fill="var(--org)"/>
+          <circle id="lso3" class="orgdot" cx="380" cy="150" r="7" fill="var(--org)"/>
+          <circle id="lso4" class="orgdot" cx="440" cy="172" r="7" fill="var(--org)"/>
+          <circle id="lso5" class="orgdot" cx="420" cy="260" r="7" fill="var(--org)"/>
+          <circle id="lso6" class="orgdot" cx="390" cy="310" r="7" fill="var(--org)"/>
+          <circle id="lso7" class="orgdot" cx="460" cy="330" r="7" fill="var(--org)"/>
+          <circle id="lso8" class="orgdot" cx="470" cy="384" r="7" fill="var(--org)"/>
+          <!-- sectors -->
+          <g id="lsn5" class="node"><circle cx="562" cy="124" r="27" fill="none" stroke="var(--sector)" stroke-width="1.6"/><text class="nlabel" x="562" y="121" text-anchor="middle">Health</text><text class="nsub" x="562" y="135" text-anchor="middle">sector</text></g>
+          <g id="lsn6" class="node"><circle cx="566" cy="300" r="22" fill="none" stroke="var(--sector)" stroke-width="1.4"/><text class="nsub" x="566" y="304" text-anchor="middle" fill="var(--paper)">Mfg</text></g>
+          <!-- country -->
+          <g id="lsn7" class="node"><circle cx="680" cy="200" r="20" fill="none" stroke="var(--country)" stroke-width="1.4"/><text class="nlabel" x="680" y="204" text-anchor="middle">US</text></g>
+          <!-- callouts -->
+          <text id="lst1" class="callout" x="300" y="124" text-anchor="middle">two actors · one technique</text>
+          <text id="lst1b" class="callout callsub" x="300" y="138" text-anchor="middle">a shared detection priority, visible as a path</text>
+          <text id="lst2" class="callout" x="592" y="34" text-anchor="middle">sector concentration</text>
+          <text id="lst2b" class="callout callsub" x="592" y="48" text-anchor="middle">at a glance, not on page 47</text>
+          <text id="lst3" class="callout" x="300" y="28" text-anchor="middle">row 1: same record, connected</text>
+          <line id="lsl4" class="leader2" x1="588" y1="132" x2="648" y2="150"/>
+          <text id="lst4" class="callout" x="690" y="148" text-anchor="middle">maps to PIR-01</text>
+          <text id="lst4b" class="callout callsub" x="690" y="162" text-anchor="middle">6 victims → briefing item</text>
+          <circle cx="55" cy="413" r="5" fill="var(--actor)"/><text class="nsub" x="65" y="417">actor</text>
+          <circle cx="125" cy="413" r="5" fill="var(--org)"/><text class="nsub" x="135" y="417">victim org</text>
+          <circle cx="225" cy="413" r="5" fill="var(--sector)"/><text class="nsub" x="235" y="417">sector</text>
+          <circle cx="305" cy="413" r="5" fill="var(--ttp)"/><text class="nsub" x="315" y="417">technique</text>
+          <circle cx="405" cy="413" r="5" fill="var(--country)"/><text class="nsub" x="415" y="417">country</text>
+          <circle class="pirc" cx="500" cy="413" r="5" fill="none" stroke-width="1"/><text class="nsub" x="510" y="417">PIR (requirement)</text>
+        </svg>
+      </div>
+      <p class="lscaption">Same eight records, restructured as a knowledge graph: every entity is a node and every relationship can be traversed. An answer is a path. Start at <b>PIR-01</b>, walk to the sector it covers, to the victims inside the window, to the actors behind them, to the technique those actors share. <b>The conclusion emerges from the hops</b>, not from rereading reports.</p>
+    </div>
+
+    <div class="contrast">
+      <div class="cv reveal"><div class="from">lookup</div><div class="to">traversal</div><p>A TIP answers "show me records matching X." A graph answers "what connects X to Y": paths, not pages.</p></div>
+      <div class="cv reveal"><div class="from">dashboard</div><div class="to">question</div><p>Dashboards pre-compute the questions someone anticipated. The graph takes the question you have today.</p></div>
+      <div class="cv reveal"><div class="from">record</div><div class="to">relationship</div><p>In a repository the value is in the rows. In intelligence the value was always in the edges between them.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- CLAIMS -->
+<section class="sec" id="claims">
+  <div class="wrap">
+    <div class="eyebrow reveal">long-form reporting</div>
+    <h2 class="reveal">Reports become claims, not stored prose</h2>
+    <p class="lede reveal">A twenty-page vendor report is mostly narrative. Its intelligence payload is a handful of atomic assertions. Extraction keeps the assertions, each grounded to a verbatim source span, and lets the prose go.</p>
+
+    <div class="split" id="claimsplit">
+      <div class="report reveal" id="reportcard">
+        <div class="rhead"><span>VENDOR REPORT // 18 PP</span><span>JUN 2026</span></div>
+        <p>…Initial access in the observed intrusions followed <span class="claim c1">exploitation of CVE-2024-3400 on internet-facing PAN-OS appliances</span>, leading to web shells staged within minutes of exploitation. After lateral movement via SMB, operators <span class="claim c2">deployed a Rust-based ransomware variant (T1486)</span> across ESXi and Windows servers and workstations. <span class="claim c3">Victimology is primarily clustered in US healthcare organizations</span>, which aligns with leak-site postings. Overlap in infrastructure and payload obfuscation <span class="claim c4">supports attribution to Qilin with moderate confidence</span>…</p>
+        <div class="tally" id="tally">extracting claims…</div>
+      </div>
+
+      <svg class="mini reveal" viewBox="0 0 340 310" role="img" aria-label="Four extracted claims become edges: Qilin exploits CVE-2024-3400, uses T1486, targets healthcare; the report cites Qilin. Only the Report node is new.">
+        <line id="m1" class="edge" x1="99"  y1="90"  x2="243" y2="53"  stroke="var(--vuln)"   pathLength="1"/>
+        <line id="m2" class="edge" x1="100" y1="99"  x2="248" y2="131" stroke="var(--ttp)"    pathLength="1"/>
+        <line id="m3" class="edge" x1="96"  y1="106" x2="246" y2="211" stroke="var(--sector)" pathLength="1"/>
+        <line id="m4" class="edge" x1="80"  y1="215" x2="80"  y2="115" stroke="var(--org)"    pathLength="1"/>
+        <text class="elabel" x="171" y="60"  text-anchor="middle">EXPLOITS</text>
+        <text class="elabel" x="176" y="106" text-anchor="middle">USES</text>
+        <text class="elabel" x="160" y="166" text-anchor="middle">TARGETS</text>
+        <text class="elabel" x="68"  y="170" text-anchor="end">CITES</text>
+        <g class="node on"><circle cx="80"  cy="95"  r="20" fill="none" stroke="var(--actor)" stroke-width="1.4"/><text class="nlabel" x="80"  y="99"  text-anchor="middle">Qilin</text></g>
+        <g class="node on"><circle cx="262" cy="48"  r="20" fill="none" stroke="var(--vuln)" stroke-width="1.2"/><text class="nlabel" x="262" y="46"  text-anchor="middle">CVE</text><text class="nsub" x="262" y="57"  text-anchor="middle">2024-3400</text></g>
+        <g class="node on"><circle cx="268" cy="135" r="20" fill="none" stroke="var(--ttp)" stroke-width="1.2"/><text class="nlabel" x="268" y="133" text-anchor="middle">T1486</text><text class="nsub" x="268" y="144" text-anchor="middle">encrypt</text></g>
+        <g class="node on"><circle cx="262" cy="222" r="20" fill="none" stroke="var(--sector)" stroke-width="1.2"/><text class="nlabel" x="262" y="220" text-anchor="middle">Health</text><text class="nsub" x="262" y="231" text-anchor="middle">sector</text></g>
+        <g class="node on"><circle cx="80"  cy="235" r="20" fill="none" stroke="var(--paper)" stroke-width="1.1"/><text class="nlabel" x="80"  y="233" text-anchor="middle">Report</text><text class="nsub" x="80"  y="244" text-anchor="middle">new</text></g>
+        <text class="nsub" x="170" y="296" text-anchor="middle">existing nodes converge · only the Report node is new</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- GROUNDING -->
+<section class="sec" id="grounding">
+  <div class="wrap">
+    <div class="eyebrow reveal">accuracy</div>
+    <h2 class="reveal">Grounded by architecture, not by promise</h2>
+    <p class="lede reveal">This is retrieval-augmented generation (RAG) in its strictest form: retrieval returns structured assertions and deterministic query results, not loose text snippets. Facts in an answer come only from the graph; the model's own knowledge is fenced off as labeled assessment; and what the graph doesn't contain is reported as a gap, never papered over. Every fact carries a receipt:</p>
+
+    <svg class="vis reveal" id="receipt" viewBox="0 0 760 352" role="img" aria-label="An answer traces to the Cypher query that produced it, the claim that matched, and the verbatim source span the claim was extracted from">
+      <g id="gr1" class="node tdoc">
+        <rect x="80" y="8" width="600" height="52" rx="8"/>
+        <text class="thead2" x="98" y="26" fill="var(--sector)">ANSWER</text>
+        <text class="tline" x="98" y="46" fill="var(--paper)">Qilin leads Healthcare this month: 6 victims in the 30-day window.</text>
+      </g>
+      <line id="gr2" class="edge" x1="380" y1="60" x2="380" y2="86" stroke="var(--dim)" pathLength="1"/>
+      <text id="gr2l" class="elabel" x="392" y="76">produced by</text>
+      <g id="gr3" class="node tdoc">
+        <rect x="80" y="90" width="600" height="52" rx="8"/>
+        <text class="thead2" x="98" y="108" fill="var(--sector)">QUERY · deterministic, inspectable</text>
+        <text class="tline" x="98" y="128" fill="var(--org)">MATCH (g)-[:POSTED]->(p)-[:NAMES]->(o)-[:IN_SECTOR]->(:Sector {name:'Healthcare'}) …</text>
+      </g>
+      <line id="gr4" class="edge" x1="380" y1="142" x2="380" y2="168" stroke="var(--dim)" pathLength="1"/>
+      <text id="gr4l" class="elabel" x="392" y="158">which matched</text>
+      <g id="gr5" class="node tdoc">
+        <rect x="80" y="172" width="600" height="52" rx="8"/>
+        <text class="thead2" x="98" y="190" fill="var(--sector)">CLAIM · provenance-tagged</text>
+        <text class="tline" x="98" y="210" fill="var(--ttp)">(Qilin)-[:TARGETS {confidence:'high', source:'rpt-4412'}]->(Healthcare)</text>
+      </g>
+      <line id="gr6" class="edge" x1="380" y1="224" x2="380" y2="250" stroke="var(--dim)" pathLength="1"/>
+      <text id="gr6l" class="elabel" x="392" y="240">extracted from</text>
+      <g id="gr7" class="node tdoc">
+        <rect x="80" y="254" width="600" height="64" rx="8"/>
+        <text class="thead2" x="98" y="272" fill="var(--sector)">SOURCE SPAN · verbatim, or the claim is rejected</text>
+        <text class="tline" x="98" y="292" fill="var(--paper)" font-style="italic">"Victimology over the period clusters in US healthcare delivery organizations"</text>
+        <text class="tline" x="98" y="308">vendor report #4412 · June 2026 · p. 7</text>
+      </g>
+      <text id="gr8" class="callout" x="380" y="344" text-anchor="middle">no receipt, no fact: anything ungrounded ships as labeled assessment or as a gap</text>
+    </svg>
+  </div>
+</section>
+
+<!-- ASK -->
+<section class="sec" id="ask">
+  <div class="wrap">
+    <div class="eyebrow reveal">the interface</div>
+    <h2 class="reveal">Ask the graph a question</h2>
+    <p class="lede reveal">No query language, no dashboard builder. A question in plain English becomes validated and auditbale Cypher and comes back as an answer you can put in front of leadership. Including what the knowledge graph <em>doesn't</em> know: known unknowns are a deliverable, as tradecraft requires.</p>
+
+    <div class="term reveal">
+      <div class="qrow" role="group" aria-label="Sample questions">
+        <button class="qbtn" data-q="0" type="button">Which actors targeted my sector in the last 30 days?</button>
+        <button class="qbtn" data-q="1" type="button">Most active ransomware actors in Q1?</button>
+      </div>
+      <div id="chat" aria-live="polite"></div>
+      <div class="demonote">sample exchange · demo data · live platform queries your tenant graph</div>
+    </div>
+
+    <div class="e2e reveal">
+      <svg class="vis" viewBox="0 0 760 268" role="img" aria-label="End-to-end: a plain-English question becomes validated Cypher, the query traverses the graph, raw rows return, and a frontier model interprets them into a grounded answer with facts, assessment, and gaps">
+        <g id="z1" class="stg"><rect x="15" y="30" width="140" height="60" rx="8"/><text class="nlabel" x="85" y="53" text-anchor="middle">Question</text><text class="nsub" x="85" y="71" text-anchor="middle">plain English</text></g>
+        <line x1="155" y1="60" x2="183" y2="60" stroke="var(--hair)" stroke-width="1"/>
+        <g id="z2" class="stg"><rect x="185" y="30" width="150" height="60" rx="8"/><text class="nlabel" x="260" y="53" text-anchor="middle">Cypher</text><text class="nsub" x="260" y="71" text-anchor="middle">validated · bounded</text></g>
+        <line x1="335" y1="60" x2="356" y2="60" stroke="var(--hair)" stroke-width="1"/>
+        <g id="zg1" class="zg"><circle cx="385" cy="60" r="17"/><text id="zn1" class="nsub" x="385" y="64" text-anchor="middle">PIR</text></g>
+        <line x1="402" y1="60" x2="438" y2="60" stroke="var(--hair)" stroke-width="1"/>
+        <g id="zg2" class="zg"><circle cx="455" cy="60" r="17"/><text id="zn2" class="nsub" x="455" y="64" text-anchor="middle">Posts</text></g>
+        <line x1="472" y1="60" x2="508" y2="60" stroke="var(--hair)" stroke-width="1"/>
+        <g id="zg3" class="zg"><circle cx="525" cy="60" r="17"/><text id="zn3" class="nsub" x="525" y="64" text-anchor="middle">Actors</text></g>
+        <line x1="542" y1="60" x2="566" y2="60" stroke="var(--hair)" stroke-width="1"/>
+        <g id="zres" class="stg"><rect x="568" y="22" width="178" height="76" rx="8"/><text class="nsub" x="657" y="40" text-anchor="middle">RESULTS · raw rows</text><text id="zr1" class="nsub" x="580" y="60"></text><text id="zr2" class="nsub" x="580" y="78"></text></g>
+        <line x1="640" y1="100" x2="428" y2="138" stroke="var(--hair)" stroke-width="1"/>
+        <g id="zmodel" class="stg"><circle cx="395" cy="155" r="27"/><text class="nsub" x="395" y="151" text-anchor="middle">frontier</text><text class="nsub" x="395" y="164" text-anchor="middle">model</text></g>
+        <line x1="395" y1="184" x2="395" y2="200" stroke="var(--hair)" stroke-width="1"/>
+        <g id="z4" class="stg"><rect x="95" y="202" width="600" height="40" rx="8"/><text class="nsub" x="395" y="226" text-anchor="middle">ANSWER · grounded facts · labeled assessment · flagged gaps</text></g>
+        <circle id="zdot" class="zdot" cx="385" cy="60" r="5"/>
+        <text id="zctx" class="nsub" x="380" y="262" text-anchor="middle"></text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap fgrid">
+    <div class="sig">a working prototype · 2026</div>
+  </div>
+</footer>
+
+<script>
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep = ms => new Promise(r => setTimeout(r, reduced ? 0 : ms));
+
+/* scroll reveals */
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+}), {threshold:.18});
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+/* ---------- hero ingest ---------- */
+const ingestEl = document.getElementById('ingest');
+const RECORD = [
+  {t:'sources: ',c:'k'},{t:'leak-sites · vendor-reports · ATT&CK · KEV'},
+  {t:'  ⇒  { '},
+  {t:'"actor"',c:'k'},{t:': '},{t:'"qilin"',c:'v-actor'},{t:', '},
+  {t:'"uses"',c:'k'},{t:': '},{t:'"T1486"',c:'v-ttp'},{t:', '},
+  {t:'"targets"',c:'k'},{t:': '},{t:'"Healthcare"',c:'v-sector'},{t:' }'}
+];
+async function typeRecord(){
+  ingestEl.innerHTML = '';
+  const caret = document.createElement('span'); caret.className = 'caret';
+  ingestEl.appendChild(caret);
+  for (const seg of RECORD){
+    const span = document.createElement('span');
+    if (seg.c) span.className = seg.c;
+    ingestEl.insertBefore(span, caret);
+    for (const ch of seg.t){ span.textContent += ch; await sleep(16); }
+  }
+  await sleep(350);
+  caret.remove();
+}
+const HERO_SEQ = ['n1','e1','l1','n2','e2','l2','n3','e3','l3','n4','e4','l4','n5','e5','l5','n6','e6','l6','n7','n8','e7','l7'];
+function resetHero(){ HERO_SEQ.forEach(id => document.getElementById(id).classList.remove('on')); }
+async function runHero(){
+  resetHero();
+  await typeRecord();
+  for (const id of HERO_SEQ){
+    document.getElementById(id).classList.add('on');
+    await sleep(id.startsWith('n') ? 260 : 120);
+  }
+}
+let heroBusy = false;
+async function heroOnce(){ if (heroBusy) return; heroBusy = true; await runHero(); heroBusy = false; }
+document.getElementById('replay').addEventListener('click', heroOnce);
+if (reduced){ typeRecord(); HERO_SEQ.forEach(id => document.getElementById(id).classList.add('on')); }
+else window.addEventListener('load', () => setTimeout(heroOnce, 500));
+
+/* ---------- cycle rail ---------- */
+const rail = document.getElementById('rail');
+const cap = document.getElementById('cyclecap');
+const btnTip = document.getElementById('btnTip');
+const btnOurs = document.getElementById('btnOurs');
+const COV_TIP  = ['manual','\u2713 automated','\u2713 automated','\u2717 left to the analyst','manual'];
+const COV_OURS = ['\u2713 automated','\u2713 automated','\u2713 automated','\u2713 automated · the point','\u2713 automated'];
+const CAP_TIP  = 'A traditional TIP automates collection and processing, then stops. Phase 4, arguably the hardest, is handed back to a human with a search box.';
+const CAP_OURS = 'Here the reasoning layer runs phase 4: traversal, trend detection, divergence. It writes phase 5 for you, and the cycle closes without a dashboard in sight.';
+let cycleManual = false;
+let cycleMode = 'ours';
+function setCycle(mode){
+  const steps = [...rail.querySelectorAll('.step')];
+  rail.classList.remove('tip','ours');
+  steps.forEach(s => s.classList.remove('lit','covered','dimstep','gap'));
+  if (mode === 'tip'){
+    rail.classList.add('tip');
+    steps[1].classList.add('covered'); steps[2].classList.add('covered');
+    steps[0].classList.add('dimstep'); steps[4].classList.add('dimstep');
+    steps[3].classList.add('gap');
+    steps.forEach((s,i) => s.querySelector('.cov').textContent = COV_TIP[i]);
+    cap.textContent = CAP_TIP;
+  } else {
+    rail.classList.add('ours');
+    steps.forEach((s,i) => s.querySelector('.cov').textContent = COV_OURS[i]);
+    cap.textContent = CAP_OURS;
+  }
+  btnTip.setAttribute('aria-pressed', String(mode === 'tip'));
+  btnOurs.setAttribute('aria-pressed', String(mode === 'ours'));
+  cycleMode = mode;
+  if (vstage.classList.contains('open') && curPhase >= 0) selectPhase(curPhase);
+}
+btnTip.addEventListener('click', () => { cycleManual = true; setCycle('tip'); });
+btnOurs.addEventListener('click', () => { cycleManual = true; setCycle('ours'); });
+
+/* ---------- phase vignettes ---------- */
+const vstage = document.getElementById('vstage');
+const vpanelsO = ['vp0','vp1','vp2','vp3','vp4'].map(id => document.getElementById(id));
+const vpanelsT = ['vt0','vt1','vt2','vt3','vt4'].map(id => document.getElementById(id));
+const railSteps = [...rail.querySelectorAll('.step')];
+const VSEQ_O = {
+  0: [['v1c','on',300],['v1e1','on',150],['v1p1','on',260],['v1e2','on',150],['v1l1','on',60],['v1p2','on',260],['v1e3','on',150],['v1p3','on',420],
+      ['v1f1','on',120],['v1t1','on',200],['v1f2','on',120],['v1t2','on',200],['v1f3','on',120],['v1t3','on',500],['v1cap','on',0]],
+  1: [['v2cap','on',2200]],
+  2: [['v3rec','on',700],['v3ar','on',300],['v3a','on',300],['v3b','on',800],
+      ['v3a','m1',60],['v3b','m2',950],['v3b','gone',60],['v3a','gone',350],
+      ['v3c','on',350],['v3d','on',500],['v3cap1','on',120],['v3cap2','on',0]],
+  3: [['v4r1','on',180],['v4m1','on',120],['v4lm','on',80],['v4a1','on',240],
+      ['v4r2','on',160],['v4m2','on',240],
+      ['v4r3','on',160],['v4m3','on',120],['v4a2','on',300],
+      ['v4ans','on',140],['v4la','on',160],['v4p1','on',300],
+      ['v4h1','on',120],['v4lh','on',100],['v4co','on',240],
+      ['v4p2','on',120],['v4h2','on',500],
+      ['v4ans','hot',60],['v4p1','hotn',60],['v4h1','hot',450],
+      ['v4r3','faded',60],['v4m3','faded',60],['v4a2','faded',60],['v4p2','faded',60],['v4h2','faded',450],
+      ['v4cap','on',0]],
+  4: [['v5r1','show',700],['v5r2','show',700],['v5r3','show',0]]
+};
+const VSEQ_T = {
+  0: [['t1doc','on',420],['t1l1','on',680],['t1l2','on',680],['t1l3','on',680],['t1f','on',750],['t1cap','on',0]],
+  1: [['t2tab','on',650],['t2r1','on',540],['t2r2','on',540],['t2r3','on',540],['t2pg','on',650],['t2cap','on',0]],
+  2: [['t3b1','on',360],['t3a1','on',220],['t3b2','on',360],['t3a2','on',220],['t3b3','on',700],['t3lock','on',850],['t3cap','on',0]],
+  3: [['t4c1','on',700],['t4cur','on',200],['t4cur','cp1',900],['t4c2','on',850],['t4cur','cp2',900],['t4c3','on',850],['t4cur','cp3',950],['t4cnt','on',0]],
+  4: [['t5doc','on',520],['t5l1','on',820],['t5l2','on',900],['t5l3','on',820],['t5cap','on',0]]
+};
+const VCLS = 'on hot hotn faded show m1 m2 gone cp1 cp2 cp3'.split(' ');
+let vToken = 0, vOpened = false, curPhase = -1;
+async function typePlain(el, txt, tok){
+  el.innerHTML = '<span style="color:var(--dim)">analyst › </span>';
+  const s = document.createElement('span'); el.appendChild(s);
+  for (const ch of txt){ if (tok !== vToken) return; s.textContent += ch; await sleep(13); }
+}
+async function selectPhase(i){
+  vOpened = true; curPhase = i;
+  const tok = ++vToken;
+  const ours = cycleMode !== 'tip';
+  vstage.classList.add('open');
+  vpanelsO.forEach((p,j) => p.classList.toggle('active', ours && j === i));
+  vpanelsT.forEach((p,j) => p.classList.toggle('active', !ours && j === i));
+  railSteps.forEach((s,j) => s.classList.toggle('sel', j === i));
+  const panel = (ours ? vpanelsO : vpanelsT)[i];
+  panel.querySelectorAll('.on,.hot,.hotn,.faded,.show,.m1,.m2,.gone,.cp1,.cp2,.cp3').forEach(el =>
+    VCLS.forEach(c => el.classList.remove(c)));
+  await sleep(250); if (tok !== vToken) return;
+  if (ours && i === 3){
+    await typePlain(document.getElementById('v4q'),
+      'Which threats reported in the last 24 hours are most relevant to us?', tok);
+    await sleep(400); if (tok !== vToken) return;
+  }
+  const seq = (ours ? VSEQ_O : VSEQ_T)[i];
+  for (const [id, cls, d] of seq){
+    if (tok !== vToken) return;
+    const el = document.getElementById(id);
+    if (el) el.classList.add(cls);
+    await sleep(d);
+  }
+}
+railSteps.forEach((s,i) => {
+  s.setAttribute('role','button');
+  s.setAttribute('tabindex','0');
+  s.setAttribute('aria-label', 'Phase ' + (i+1) + ' — show example animation');
+  s.addEventListener('click', () => selectPhase(i));
+  s.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); selectPhase(i); }
+  });
+});
+
+if (reduced){ setCycle('ours'); }
+else new IntersectionObserver((es,obs) => es.forEach(async e => {
+  if (!e.isIntersecting) return; obs.disconnect();
+  const steps = rail.querySelectorAll('.step');
+  for (const s of steps){ s.classList.add('lit'); await sleep(380); }
+  await sleep(900);   if (cycleManual) return;
+  setCycle('tip');
+  await sleep(3600);  if (cycleManual) return;
+  setCycle('ours');
+  await sleep(1100);  if (cycleManual || vOpened) return;
+  selectPhase(3);
+}), {threshold:.35}).observe(rail);
+
+/* ---------- claims ---------- */
+const reportCard = document.getElementById('reportcard');
+const tally = document.getElementById('tally');
+const CLAIMS = [
+  {sel:'.c1', edge:'m1', tx:171, ty:71,  text:'(Qilin)-[:EXPLOITS]→(CVE-2024-3400)', color:'#D96C47'},
+  {sel:'.c2', edge:'m2', tx:174, ty:115, text:'(Qilin)-[:USES]→(T1486)',             color:'#A78BDA'},
+  {sel:'.c3', edge:'m3', tx:171, ty:158, text:'(Qilin)-[:TARGETS]→(Healthcare)',     color:'#E8A33D'},
+  {sel:'.c4', edge:'m4', tx:88,  ty:166, text:'(Report)-[:CITES]→(Qilin)',           color:'#5B8DD9'}
+];
+function flyChip(srcEl, c){
+  return new Promise(res => {
+    const cont = document.getElementById('claimsplit');
+    const svg = cont.querySelector('svg.mini');
+    const cr = cont.getBoundingClientRect();
+    const sr = srcEl.getBoundingClientRect();
+    const vr = svg.getBoundingClientRect();
+    const chip = document.createElement('span');
+    chip.className = 'chip'; chip.textContent = c.text;
+    chip.style.borderColor = c.color; chip.style.color = c.color;
+    chip.style.left = (sr.left - cr.left) + 'px';
+    chip.style.top  = (sr.top  - cr.top)  + 'px';
+    cont.appendChild(chip);
+    const tx = (vr.left - cr.left) + c.tx * (vr.width / 340) - (sr.left - cr.left);
+    const ty = (vr.top  - cr.top)  + c.ty * (vr.height / 310) - (sr.top - cr.top);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      chip.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(.85)';
+      chip.style.opacity = '0';
+    }));
+    setTimeout(() => { chip.remove(); res(); }, 1520);
+  });
+}
+async function claimsCycle(){
+  while (true){
+    for (const c of CLAIMS){
+      const span = reportCard.querySelector(c.sel);
+      span.classList.add('on');
+      await sleep(750);
+      if (!reduced) await flyChip(span, c);
+      document.getElementById(c.edge).classList.add('on');
+      await sleep(650);
+    }
+    await sleep(300);
+    tally.innerHTML = '18 pages in → <b>4 claims</b>, <b>1 new node</b>, <b>0 paragraphs stored</b> · every edge keeps its source span';
+    if (reduced) return;
+    await sleep(3600);
+    CLAIMS.forEach(c => {
+      reportCard.querySelector(c.sel).classList.remove('on');
+      document.getElementById(c.edge).classList.remove('on');
+    });
+    tally.textContent = 'extracting claims…';
+    await sleep(1300);
+  }
+}
+new IntersectionObserver((es,obs) => es.forEach(e => {
+  if (!e.isIntersecting) return; obs.disconnect();
+  claimsCycle();
+}), {threshold:.4}).observe(reportCard);
+
+/* ---------- landscape ---------- */
+const btnTable = document.getElementById('btnTable');
+const btnGraph = document.getElementById('btnGraph');
+const lsTable = document.getElementById('lsTable');
+const lsGraph = document.getElementById('lsGraph');
+const LS_SEQ = [
+  'lsn1','lsn2','lsn3',
+  'lsn4','lsu1','lsu2',
+  'lso1','lse1','lso2','lse2','lso3','lse3','lso4','lse4',
+  'lso5','lse5','lso6','lse6','lso7','lse7','lso8','lse8',
+  'lsn5','lss1','lss2','lss3','lss4','lss5',
+  'lsn6','lss6','lss7','lss8',
+  'lsn7','lsc1','lsc2'
+];
+let lsPlayed = false;
+async function runLandscape(){
+  if (lsPlayed) return; lsPlayed = true;
+  for (const id of LS_SEQ){
+    document.getElementById(id).classList.add('on');
+    await sleep(id.startsWith('lsn') ? 200 : 90);
+  }
+  await sleep(500);
+  document.getElementById('lsu1').classList.add('hot');
+  document.getElementById('lsu2').classList.add('hot');
+  document.getElementById('lsl1').classList.add('on');
+  document.getElementById('lst1').classList.add('on');
+  document.getElementById('lst1b').classList.add('on');
+  await sleep(900);
+  document.getElementById('lsl2').classList.add('on');
+  document.getElementById('lst2').classList.add('on');
+  document.getElementById('lst2b').classList.add('on');
+  await sleep(900);
+  document.getElementById('lso1').classList.add('hot');
+  document.getElementById('lsl3').classList.add('on');
+  document.getElementById('lst3').classList.add('on');
+  await sleep(900);
+  document.getElementById('lsn5').classList.add('hotn');
+  document.getElementById('lsl4').classList.add('on');
+  document.getElementById('lst4').classList.add('on');
+  document.getElementById('lst4b').classList.add('on');
+  await sleep(500);
+  document.getElementById('lsp1').classList.add('on');
+  document.getElementById('lspe').classList.add('on');
+}
+/* silo detail card */
+const tipRows = [...document.querySelectorAll('#lsTable table.tip tbody tr')];
+const recdetail = document.getElementById('recdetail');
+let rdShown = false;
+function showDetail(tr){
+  rdShown = true;
+  tipRows.forEach(r => r.classList.remove('rowsel'));
+  tr.classList.add('rowsel');
+  const td = tr.querySelectorAll('td');
+  document.getElementById('rdg').textContent = td[1].textContent;
+  document.getElementById('rdv').textContent = td[2].textContent;
+  document.getElementById('rds').textContent = td[3].textContent + ' · ' + td[4].textContent + ' · disclosed ' + td[0].textContent;
+  recdetail.classList.add('openrd');
+}
+tipRows.forEach(tr => tr.addEventListener('click', () => { lsManual = true; showDetail(tr); }));
+new IntersectionObserver((es,obs) => es.forEach(async e => {
+  if (!e.isIntersecting) return; obs.disconnect();
+  await sleep(1500);
+  if (!rdShown && lsTable.classList.contains('active')) showDetail(tipRows[0]);
+  await sleep(3000);
+  lsLoop();
+}), {threshold:.5}).observe(document.getElementById('lsTable'));
+function setView(graph){
+  lsTable.classList.toggle('active', !graph);
+  lsGraph.classList.toggle('active', graph);
+  lsGraph.classList.add('in');
+  btnTable.setAttribute('aria-pressed', String(!graph));
+  btnGraph.setAttribute('aria-pressed', String(graph));
+  if (graph) runLandscape();
+}
+btnTable.addEventListener('click', () => { lsManual = true; setView(false); });
+btnGraph.addEventListener('click', () => { lsManual = true; setView(true); });
+if (reduced){
+  LS_SEQ.forEach(id => document.getElementById(id).classList.add('on'));
+  ['lsl1','lst1','lst1b','lsl2','lst2','lst2b','lsl3','lst3','lsl4','lst4','lst4b','lsp1','lspe'].forEach(id => document.getElementById(id).classList.add('on'));
+  document.getElementById('lso1').classList.add('hot');
+  document.getElementById('lsn5').classList.add('hotn');
+  lsPlayed = true;
+}
+/* auto-alternate the two views until the user interacts */
+let lsManual = false;
+async function lsLoop(){
+  let first = true;
+  while (!lsManual && !reduced){
+    setView(true);
+    await sleep(first ? 15000 : 8000);
+    first = false;
+    if (lsManual) return;
+    setView(false);
+    await sleep(5500);
+  }
+}
+
+/* ---------- grounding receipt chain ---------- */
+const receipt = document.getElementById('receipt');
+const GR_SEQ = ['gr1','gr2','gr2l','gr3','gr4','gr4l','gr5','gr6','gr6l','gr7','gr8'];
+if (reduced){
+  GR_SEQ.forEach(id => document.getElementById(id).classList.add('on'));
+} else new IntersectionObserver((es,obs) => es.forEach(async e => {
+  if (!e.isIntersecting) return; obs.disconnect();
+  await sleep(400);
+  for (const id of GR_SEQ){
+    document.getElementById(id).classList.add('on');
+    await sleep(id.endsWith('l') ? 120 : (id === 'gr8' ? 0 : 420));
+  }
+}), {threshold:.3}).observe(receipt);
+
+/* ---------- chat ---------- */
+const chat = document.getElementById('chat');
+const EXCHANGES = [
+  {
+    q:'Which actors have targeted my sector in the last 30 days?',
+    cy:`<span class="cy">MATCH</span> (g:Group)-[:POSTED]->(p:Post)-[:NAMES]->(o:Organization)-[:IN_SECTOR]->(:Sector {name:'Healthcare'})
+<span class="cy">WHERE</span> p.disclosed >= date('2026-05-11') <span class="cy">AND</span> p.disclosed < date('2026-06-11')
+<span class="cy">RETURN</span> g.name, count(<span class="cy">DISTINCT</span> p) <span class="cy">AS</span> victims <span class="cy">ORDER BY</span> victims <span class="cy">DESC</span>`,
+    a:'Four groups hit Healthcare in the last 30 days: <b>Qilin (6)</b>, including two diagnostic-imaging providers, consistent with its recent shift toward diagnostics; <b>INC (3)</b>; <b>ShinyHunters (2)</b>; <b>Medusa (1)</b>. Twelve victims total, deduplicated, window 2026-05-11 to 2026-06-10. This answers <b>PIR-01</b>: \u201cWhich ransomware groups are targeting our sector, and how are they getting in?\u201d<span class="gapline"><i>KNOWN UNKNOWN</i>The first half of PIR-01 is answered above. The second half is not: no report in the graph yet ties this cluster to an initial-access vector. Logged as a gap, collection task queued.</span>',
+    rows:['Qilin 6 · INC 3','Shiny 2 · Medusa 1'],
+    rctx:'raw rows returned: deduplicated victim counts per group, nothing more',
+    mctx:'the model interprets: grounds each figure in a row, adds actor context, matches the PIR, separates fact from assessment',
+    path:[
+      {n:'PIR',     c:'question matched to PIR-01, ransomware targeting of healthcare'},
+      {n:'Posts',   c:'victim posts fetched, explicit 30-day window, deduplicated'},
+      {n:'Actors',  c:'groups resolved and ranked by victim count'}
+    ]
+  },
+  {
+    q:'Which ransomware actors were most active in Q1 this year?',
+    cy:`<span class="cy">MATCH</span> (g:Group)-[:POSTED]->(p:Post)
+<span class="cy">WHERE</span> p.disclosed >= date('2026-01-01') <span class="cy">AND</span> p.disclosed < date('2026-04-01')
+<span class="cy">WITH</span> g, count(<span class="cy">DISTINCT</span> p) <span class="cy">AS</span> victims
+<span class="cy">OPTIONAL MATCH</span> (r:Report)-[:MENTIONS]->(g) <span class="cy">WHERE</span> r.published >= date('2026-01-01')
+<span class="cy">RETURN</span> g.name, victims, count(<span class="cy">DISTINCT</span> r) <span class="cy">AS</span> reports <span class="cy">ORDER BY</span> victims <span class="cy">DESC LIMIT</span> 5`,
+    a:'Q1 2026 by leak-site victims: <b>Qilin (142)</b>, <b>Akira (118)</b>, <b>INC (97)</b>, <b>Play (84)</b>, <b>ShinyHunters (71)</b>. OSINT reporting corroborates the top of the table: Qilin (31 reports) and Akira (27) also lead community coverage, so observed activity and reporting align. One divergence worth noting: INC ranks third in victims but seventh in reporting volume, comparatively under-covered for its activity level.<span class="gapline"><i>UNKNOWN UNKNOWN</i>Leak sites only show victims who refused to pay. Actors with high payment rates are invisible to this dataset by design.</span>',
+    rows:['Qilin 142 · Akira 118','INC 97 · Play 84'],
+    rctx:'rows returned: Q1 victim counts joined with report counts per group',
+    mctx:'the model cross-checks victim data against reporting volume, notes the divergence, and labels its confidence',
+    path:[
+      {n:'Posts',   c:'Q1 window: 2026-01-01 to 2026-04-01, deduplicated victim count'},
+      {n:'Actors',  c:'groups ranked by distinct victims'},
+      {n:'Reports', c:'OSINT reports cross-checked to corroborate the ranking'}
+    ]
+  }
+];
+function addMsg(cls, html){
+  const d = document.createElement('div');
+  d.className = 'msg ' + cls; d.innerHTML = html;
+  chat.appendChild(d);
+  requestAnimationFrame(() => requestAnimationFrame(() => d.classList.add('show')));
+  return d;
+}
+let chatBusy = false;
+async function runExchange(i){
+  if (chatBusy) return; chatBusy = true;
+  document.querySelectorAll('.qbtn').forEach(b => b.disabled = true);
+  chat.innerHTML = '';
+  const ex = EXCHANGES[i];
+  const zctx = document.getElementById('zctx');
+  const zdot = document.getElementById('zdot');
+  ['z1','z2','zres','zmodel','z4','zg1','zg2','zg3'].forEach(id => document.getElementById(id).classList.remove('on'));
+  zctx.textContent = '';
+  zdot.style.opacity = '0';
+  zdot.style.transform = 'translate(0px,0px)';
+  const STYLE = {PIR:['var(--paper)','4 3'],Posts:['var(--paper)',''],Actors:['var(--actor)',''],Reports:['var(--paper)','']};
+  ex.path.forEach((st,k) => {
+    document.getElementById('zn' + (k+1)).textContent = st.n;
+    const c = document.querySelector('#zg' + (k+1) + ' circle');
+    c.style.stroke = STYLE[st.n][0];
+    c.style.strokeDasharray = STYLE[st.n][1];
+  });
+  document.getElementById('zr1').textContent = ex.rows[0];
+  document.getElementById('zr2').textContent = ex.rows[1];
+  addMsg('user', ex.q);
+  document.getElementById('z1').classList.add('on');   await sleep(800);
+  addMsg('cypher', ex.cy);
+  document.getElementById('z2').classList.add('on');   await sleep(700);
+  zdot.style.opacity = '1';
+  const HOPS = [[0,0],[70,0],[140,0]];
+  for (let k = 0; k < 3; k++){
+    zdot.style.transform = 'translate(' + HOPS[k][0] + 'px,' + HOPS[k][1] + 'px)';
+    await sleep(600);
+    document.getElementById('zg' + (k+1)).classList.add('on');
+    zctx.textContent = ex.path[k].c;
+    await sleep(1000);
+  }
+  zdot.style.transform = 'translate(272px,0px)';        await sleep(620);
+  document.getElementById('zres').classList.add('on');
+  zctx.textContent = ex.rctx;                           await sleep(1150);
+  zdot.style.transform = 'translate(10px,95px)';        await sleep(650);
+  document.getElementById('zmodel').classList.add('on');
+  zctx.textContent = ex.mctx;                           await sleep(1500);
+  zdot.style.transform = 'translate(10px,162px)';       await sleep(600);
+  addMsg('answer', ex.a);
+  document.getElementById('z4').classList.add('on');
+  zdot.style.opacity = '0';
+  zctx.textContent = 'every figure traces to a returned row; everything else is labeled assessment or gap';
+  await sleep(300);
+  document.querySelectorAll('.qbtn').forEach(b => b.disabled = false);
+  chatBusy = false;
+}
+document.querySelectorAll('.qbtn').forEach(b =>
+  b.addEventListener('click', () => runExchange(+b.dataset.q)));
+new IntersectionObserver((es,obs) => es.forEach(e => {
+  if (!e.isIntersecting) return; obs.disconnect(); runExchange(0);
+}), {threshold:.4}).observe(document.querySelector('.term'));
+</script>
+</body>
+</html>

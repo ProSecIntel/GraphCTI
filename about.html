@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About GraphCTI — why, who, and what changes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:ital@1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#10151F;
+  --panel:#161D2B;
+  --panel2:#1B2434;
+  --paper:#E9E5DA;
+  --dim:#8B93A3;
+  --hair:rgba(233,229,218,.13);
+  --actor:#E5484D;
+  --org:#5B8DD9;
+  --sector:#E8A33D;
+  --country:#58A66B;
+  --ttp:#A78BDA;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --serif:'IBM Plex Serif',Georgia,serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--paper);font-family:var(--sans);font-size:17px;line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:var(--paper)}
+:focus-visible{outline:2px solid var(--sector);outline-offset:3px;border-radius:2px}
+.wrap{max-width:760px;margin:0 auto;padding:0 24px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
+.eyebrow b{color:var(--sector);font-weight:500}
+h1{font-family:var(--mono);font-weight:600;font-size:clamp(28px,4.6vw,42px);line-height:1.18;letter-spacing:-.02em;margin:16px 0 18px}
+h1 .em{color:var(--sector)}
+h2{font-family:var(--mono);font-weight:500;font-size:clamp(20px,3vw,26px);line-height:1.3;margin:0 0 16px}
+p{color:var(--dim);margin-bottom:18px}
+p b,p strong{color:var(--paper);font-weight:500}
+.lede{font-size:18px}
+.sec{padding:72px 0;border-top:1px solid var(--hair)}
+.hero{padding:80px 0 64px}
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+.kicker{font-family:var(--serif);font-style:italic;font-size:20px;color:var(--paper);opacity:.92;margin:26px 0}
+header{position:sticky;top:0;z-index:9;background:rgba(16,21,31,.82);backdrop-filter:blur(8px);border-bottom:1px solid var(--hair)}
+.bar{display:flex;align-items:center;justify-content:space-between;height:54px;max-width:980px;margin:0 auto;padding:0 24px}
+.brand{font-family:var(--mono);font-size:13px;letter-spacing:.14em;text-decoration:none}
+.brand i{font-style:normal;color:var(--sector)}
+nav.top a{font-family:var(--mono);font-size:12px;color:var(--dim);text-decoration:none}
+nav.top a:hover{color:var(--paper)}
+.scene{background:var(--panel);border:1px solid var(--hair);border-radius:10px;padding:22px 24px;margin:8px 0 18px}
+.scene .sh{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--dim);margin-bottom:10px}
+.scene.after .sh{color:var(--sector)}
+.scene.after{border-color:rgba(232,163,61,.4)}
+.scene p{margin-bottom:0;font-size:15px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:26px 0 6px}
+@media(max-width:680px){.cards{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--hair);border-radius:8px;padding:18px 16px}
+.card h3{font-family:var(--mono);font-weight:500;font-size:13.5px;color:var(--sector);margin-bottom:8px}
+.card p{font-size:14px;margin-bottom:0;line-height:1.6}
+ulist{display:block}
+.status{font-family:var(--mono);font-size:13px;line-height:2.1;color:var(--dim)}
+.status .ok{color:var(--country)}
+.status .no{color:var(--actor)}
+.status b{color:var(--paper);font-weight:500}
+.cta{background:var(--panel);border:1px solid var(--hair);border-radius:10px;padding:26px;margin-top:8px}
+.cta p{margin-bottom:8px}
+footer{border-top:1px solid var(--hair);padding:48px 0 64px}
+footer .sig{font-family:var(--mono);font-size:12px;color:var(--dim)}
+@media (prefers-reduced-motion: reduce){.reveal{transition:none;opacity:1;transform:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <a class="brand" href="index.html">GRAPH<i>CTI</i></a>
+    <nav class="top" aria-label="Pages">
+      <a href="index.html">← back to home</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow reveal"><b>about</b> // why, who, and what changes</div>
+    <h1 class="reveal">Built because the analysis was always <span class="em">the analyst's problem</span></h1>
+    <p class="lede reveal">GraphCTI is a working prototype of an AI-native threat intelligence platform: a knowledge graph of assertions extracted from threat reporting, with a reasoning model as the interface. This page is the long-form version of the argument: where it came from, who it serves, and what actually changes if it works.</p>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    <div class="eyebrow reveal">the why</div>
+    <h2 class="reveal">Threat intelligence has a consumption problem, not a collection problem</h2>
+    <p class="reveal">The industry is excellent at producing intelligence: leak-site trackers, vendor reporting, government and vulnerability advisories, etc. However, the tooling built to hold all of it, the traditional Threat Intelligence Platform, is an enriched repository. Everything hangs off siloed report objects. The relationships that make intelligence <b>actionable</b> (which actors share techniques, which campaigns answer which requirements, what your collection doesn't cover) exist only if an analyst manually constructs them, one pivot at a time.</p>
+    <p class="reveal">The result is a quiet tax paid by every intel function: hours spent extracting relevance from PDFs, dashboards that answer last year's questions, requirements documents that live in SharePoint where no query can reach them, and leadership briefings assembled by copy-paste every Friday. The analysis, the actual job, happens in the analyst's head and nowhere else.</p>
+    <p class="reveal">GraphCTI starts from a different premise: <b>extract what reports actually assert</b>, the claims about actors, campaigns, techniques, intent, and indicators, into a graph at ingestion, make requirements (PIRs) nodes in that same graph, and let an interpretation layer traverse it in plain language. The repository stops being the product. The reasoning over it becomes the product.</p>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    <div class="eyebrow reveal">the impact</div>
+    <h2 class="reveal">What changes, concretely</h2>
+
+    <div class="scene reveal">
+      <div class="sh">MONDAY MORNING · TRADITIONAL TIP</div>
+      <p>Leadership asks which ransomware actors matter to the company right now. The analyst opens the platform, runs a search, pages through report objects, opens six PDFs, extracts TTPs by hand, cross-references the requirements doc from memory, builds a spreadsheet, and writes the summary. Wednesday, the deck is ready. The next question starts the process over.</p>
+    </div>
+    <div class="scene after reveal">
+      <div class="sh">MONDAY MORNING · GRAPHCTI</div>
+      <p>The same question is asked in a sentence. The interpretation layer (Claude, OpenAI, Gemini, etc.) matches it to the standing PIR, runs bounded Cypher queries, cross-checks observed victimology against community reporting, and returns the ranked answer with provenance, plus what the collection <b>doesn't</b> know, logged as a collection gap. The analyst spends the morning on judgment: so what, what next, what to brief.</p>
+    </div>
+
+    <div class="cards">
+      <div class="card reveal"><h3>"Which actors target organizations like ours, and how do they get in?"</h3><p>Threat groups, initial access techniques, and exploited CVEs are extracted from threat reports during data ingestion and returned to analysts within seconds to minutes. The answer arrives with provenance.</p></div>
+      <div class="card reveal"><h3>"What changed in the landscape this month?"</h3><p>Trend and novelty analysis across every report and every victim record in the collection, not the sample one analyst had time to read. New actors, new actor-technique pairings, and shifts in sector targeting surface automatically as new data is ingested into the knowledge graph.</p></div>
+      <div class="card reveal"><h3>"Are we collecting against what matters?"</h3><p>PIR coverage is measurable. Requirements with heavy answering reporting and requirements with none look different in the graph, so known unknowns become collection tasks instead of footnotes.</p></div>
+      <div class="card reveal"><h3>"What do we brief leadership?"</h3><p>Grounded facts, labeled assessment, and explicit gaps, drafted from the graph in minutes. Rather than sifting through various reports manually, an afternoon becomes a half-hour where analyst smartly queries intelligence related to PIRs, leveraging the context windows and reasoning of LLMs to identify trends that would be otherwise, difficult to spot in a traditional TIP. Analysis is possible at the speed and scale of the whole collection.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    <div class="eyebrow reveal">known and unknown</div>
+    <h2 class="reveal">An instrument for what you know, and for what you don't</h2>
+    <p class="reveal">Estimative tradecraft begins with an honest inventory of knowledge. Because requirements, reports, and claims share one graph, that inventory is queryable across all four quadrants:</p>
+    <div class="cards">
+      <div class="card reveal" style="border-left:2px solid var(--country)"><h3 style="color:var(--country)">Known knowns</h3><p>Facts in the graph: span-grounded claims, victim records, technique mappings. Every figure traceable to a source. This is the only quadrant a traditional TIP ever shows you.</p></div>
+      <div class="card reveal" style="border-left:2px solid var(--sector)"><h3 style="color:var(--sector)">Known unknowns</h3><p>PIRs with thin or no answering coverage. The graph measures the silence: heavy reporting against one requirement and nothing against another is an intelligence gap, surfaced automatically and turned into a collection task.</p></div>
+      <div class="card reveal" style="border-left:2px solid var(--ttp)"><h3 style="color:var(--ttp)">Unknown knowns</h3><p>Connections you already collected but never made: two actors sharing a technique across reports nobody cross-read. Traversal finds what is latent in your own holdings.</p></div>
+      <div class="card reveal" style="border-left:2px solid var(--actor)"><h3 style="color:var(--actor)">Unknown unknowns</h3><p>Outside collection entirely. Broad ingestion and first-seen novelty detection shrink this quadrant, and honest reporting acknowledges it is never empty. Saying so in a briefing is tradecraft, not weakness.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    <div class="eyebrow reveal">who it's for</div>
+    <h2 class="reveal">Analysts first, deliberately</h2>
+    <p class="reveal"><b>CTI analysts are the first users</b>, because they can pressure test an early system: they can recognize a wrong attribution, a miscategorization, an overconfident claim. MSSP and MDR teams feel the pain most acutely (the same landscape questions, answered repeatedly across many clients) and intel-led enterprise teams are the natural second home.</p>
+    <p class="reveal">Ideally, once refinement of ingestion pipelines has matured: security leaders and IT teams <b>without</b> dedicated threat intelligence analysts can eventually consume real intelligence directly, through scoped briefings, sector landscape answers, and prioritized risk context, at a cost structure the traditional TIPs and intel service providers can't. That expansion comes after the grounding has been hardened by expert use, not before. Sequence, not segment choice.</p>
+    <p class="reveal">It is important to note that GraphCTI is not a replacement for premium threat intelligence such as what is provided by CrowdStrike's Counter Adversary Operations, Google Threat Intelligence, Intel471, RecordedFuture, etc. Instead, GraphCTI would consume these datasets as it would any other data source (similar to a traditional TIP).</p>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    <div class="eyebrow reveal">who's building it</div>
+    <h2 class="reveal">A practitioner, in the open</h2>
+    <p class="reveal">GraphCTI is built by a <b>practicing Senior Cyber Threat Intelligence Analyst</b> defending a Fortune 500 enterprise, currently completing a graduate degree in cybersecurity. This was originally a personal project built on personal time, born from the daily experience of doing this job with tools that store intelligence but do little to help analyze it.</p>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    <div class="eyebrow reveal">status</div>
+    <h2 class="reveal">What's real today, and what isn't yet</h2>
+    <p class="status reveal">
+      <span class="ok">●</span> <b>Operational:</b> automated ransomware victimology ingestion into a knowledge graph<br>
+      <span class="ok">●</span> <b>Operational:</b> natural-language analysis layer with validated, deduplicated query patterns<br>
+      <span class="ok">●</span> <b>Operational:</b> entity resolution and data-quality guards learned the hard way<br>
+      <span class="no">●</span> <b>Not built:</b> report-to-assertion extraction at scale, the next milestone<br>
+      <span class="no">●</span> <b>Not built:</b> automated dissemination, planned as augmentation: the graph drafts, the analyst owns the assessment<br>
+      <span class="no">●</span> <b>Not built:</b> use of analytical methdologies sourced from <a href="https://www.cia.gov/resources/csi/static/Tradecraft-Primer-apr09.pdf">CIA tradecraft</a> to help aide in analysis<br>
+      <span class="no">●</span> <b>Not built:</b> multi-tenant hosting, web application, anything resembling a product you can buy
+    </p>
+    <p class="reveal">My working prototype proves the architecture on one dataset (ransomware victim data); the roadmap extends it to the long-form reporting where campaigns and threat activity lives.</p>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    <div class="eyebrow reveal">the ask</div>
+    <h2 class="reveal">Tell me the first question you'd ask it</h2>
+    <div class="cta reveal">
+      <p>If you're an analyst, an intel lead, or someone responsible for security decisions without an intel team: <b>what would you ask this graph first?</b> That single answer is the most useful thing you can offer a project at this stage.</p>
+      <p style="margin-bottom:0">Monthly landscape analyses generated from the live graph will publish here. <i style="color:var(--sector);font-style:normal;font-family:var(--mono);font-size:12px">[ email signup · coming soon with launch ]</i></p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="sig">GraphCTI · a working prototype, built in the open · 2026</div>
+  </div>
+</footer>
+
+<script>
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+}), {threshold:.15});
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
